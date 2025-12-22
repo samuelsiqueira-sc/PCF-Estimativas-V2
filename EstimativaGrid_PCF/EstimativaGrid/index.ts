@@ -1,10 +1,11 @@
 import { IInputs, IOutputs } from "./generated/ManifestTypes";
 import * as React from "react";
-import DataSetInterfaces = ComponentFramework.PropertyHelper.DataSetApi;
-type DataSet = ComponentFramework.PropertyTypes.DataSet;
+import { EstimativaGridComponent } from "./ui-controls";
 
 export class EstimativaGrid implements ComponentFramework.ReactControl<IInputs, IOutputs> {
     private notifyOutputChanged: () => void;
+    private context: ComponentFramework.Context<IInputs>;
+    private estimativaId?: string;
 
     /**
      * Empty constructor.
@@ -26,6 +27,7 @@ export class EstimativaGrid implements ComponentFramework.ReactControl<IInputs, 
         state: ComponentFramework.Dictionary
     ): void {
         this.notifyOutputChanged = notifyOutputChanged;
+        this.context = context;
     }
 
     /**
@@ -34,7 +36,18 @@ export class EstimativaGrid implements ComponentFramework.ReactControl<IInputs, 
      * @returns ReactElement root react element for the control
      */
     public updateView(context: ComponentFramework.Context<IInputs>): React.ReactElement {
-        return React.createElement("div", null, "EstimativaGrid - Em desenvolvimento");
+        this.context = context;
+        
+        // Get the estimation ID from the dataset if available
+        const dataset = context.parameters.sampleDataSet;
+        if (dataset && dataset.getSelectedRecordIds && dataset.getSelectedRecordIds().length > 0) {
+            this.estimativaId = dataset.getSelectedRecordIds()[0];
+        }
+
+        return React.createElement(EstimativaGridComponent, {
+            context: context,
+            estimativaId: this.estimativaId
+        });
     }
 
     /**
