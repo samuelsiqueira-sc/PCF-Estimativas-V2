@@ -56,17 +56,17 @@ export const EstimationLinesGridComponent: React.FC<EstimationLinesGridComponent
 
     const faseOptions: IDropdownOption[] = fases.map(fase => ({
         key: fase.smt_faseid || '',
-        text: fase.smt_name || ''
+        text: fase.smt_nomefase || ''
     }));
 
     const subfaseOptions: IDropdownOption[] = subfases.map(subfase => ({
         key: subfase.smt_subfaseid || '',
-        text: subfase.smt_name || ''
+        text: subfase.smt_nomesubfase || ''
     }));
 
     const tipoDesenvolvimentoOptions: IDropdownOption[] = tiposDesenvolvimento.map(tipo => ({
         key: tipo.smt_tipodedesenvolvimentoid || '',
-        text: tipo.smt_name || ''
+        text: tipo.smt_nometipo || ''
     }));
 
     const renderEditableTextField = (
@@ -192,7 +192,7 @@ export const EstimationLinesGridComponent: React.FC<EstimationLinesGridComponent
             fieldName: 'smt_requisitodocliente',
             minWidth: 120,
             maxWidth: 180,
-            onRender: (item: LinhaDeEstimativa) => renderEditableTextField(item, 'smt_requisitodocliente', 'Requirement')
+            onRender: (item: LinhaDeEstimativa) => renderEditableTextField(item, 'smt_requisitocliente', 'Requirement')
         },
         {
             key: 'functionality',
@@ -261,13 +261,13 @@ export const EstimationLinesGridComponent: React.FC<EstimationLinesGridComponent
         {
             key: 'percentDev',
             name: '% Dev',
-            fieldName: 'smt_percentualdedesenvolvimento',
+            fieldName: 'smt_dedesenvolvimento',
             minWidth: 80,
             maxWidth: 80,
             onRender: (item: LinhaDeEstimativa) => {
                 // Only show for Support activities
                 if (item.smt_tipodeatividade === ActivityType.Support) {
-                    return renderEditableNumberField(item, 'smt_percentualdedesenvolvimento', 2);
+                    return renderEditableNumberField(item, 'smt_dedesenvolvimento', 2);
                 }
                 return <div />;
             }
@@ -287,7 +287,20 @@ export const EstimationLinesGridComponent: React.FC<EstimationLinesGridComponent
     ];
 
     return (
-        <Stack tokens={{ childrenGap: 10 }} styles={{ root: { flex: 1, overflow: 'hidden' } }}>
+        <Stack 
+            tokens={{ childrenGap: 12 }} 
+            styles={{ 
+                root: { 
+                    flex: 1, 
+                    overflow: 'hidden',
+                    backgroundColor: '#ffffff',
+                    padding: '16px',
+                    borderRadius: 8,
+                    boxShadow: '0 1.6px 3.6px rgba(0,0,0,0.13), 0 0.3px 0.9px rgba(0,0,0,0.11)',
+                    boxSizing: 'border-box'
+                } 
+            }}
+        >
             <Stack horizontal horizontalAlign="space-between" verticalAlign="center">
                 <Text variant="large" styles={{ root: { fontWeight: 600 } }}>
                     Estimation Lines ({lines.length})
@@ -300,7 +313,15 @@ export const EstimationLinesGridComponent: React.FC<EstimationLinesGridComponent
                 />
             </Stack>
 
-            <Stack styles={{ root: { flex: 1, overflow: 'auto' } }}>
+            <Stack 
+                styles={{ 
+                    root: { 
+                        flex: 1, 
+                        overflow: 'auto',
+                        position: 'relative'
+                    } 
+                }}
+            >
                 <DetailsList
                     items={lines}
                     columns={columns}
@@ -308,6 +329,14 @@ export const EstimationLinesGridComponent: React.FC<EstimationLinesGridComponent
                     constrainMode={ConstrainMode.unconstrained}
                     isHeaderVisible={true}
                     compact={true}
+                    styles={{
+                        root: {
+                            overflowX: 'auto',
+                            '.ms-DetailsRow': {
+                                minHeight: 36
+                            }
+                        }
+                    }}
                 />
             </Stack>
         </Stack>

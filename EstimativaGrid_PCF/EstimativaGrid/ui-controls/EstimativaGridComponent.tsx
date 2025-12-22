@@ -133,9 +133,9 @@ export class EstimativaGridComponent extends React.Component<EstimativaGridCompo
                 lines: recalculatedLines,
                 estimativa: {
                     ...prevState.estimativa,
-                    smt_horasdedesenvolvimento: totalDevelopmentHours,
-                    smt_horasdesuporte: totalSupportHours,
-                    smt_horasdoprojeto: totalProjectHours
+                    smt_totaldesenvolvimento: totalDevelopmentHours,
+                    smt_totalhorasapoio: totalSupportHours,
+                    smt_totalhorasprojeto: totalProjectHours
                 },
                 isDirty: true
             };
@@ -153,8 +153,7 @@ export class EstimativaGridComponent extends React.Component<EstimativaGridCompo
             smt_estimativaid: this.props.estimativaId,
             smt_tipodeatividade: 'Development',
             smt_dimensionamento: 0,
-            smt_estimativafinal: 0,
-            smt_ordem: this.state.lines.length
+            smt_estimativafinal: 0
         };
 
         this.setState(prevState => ({
@@ -192,9 +191,9 @@ export class EstimativaGridComponent extends React.Component<EstimativaGridCompo
                     lines: recalculatedLines,
                     estimativa: {
                         ...prevState.estimativa,
-                        smt_horasdedesenvolvimento: totalDevelopmentHours,
-                        smt_horasdesuporte: totalSupportHours,
-                        smt_horasdoprojeto: totalProjectHours
+                        smt_totaldesenvolvimento: totalDevelopmentHours,
+                        smt_totalhorasapoio: totalSupportHours,
+                        smt_totalhorasprojeto: totalProjectHours
                     },
                     isDirty: true
                 };
@@ -251,9 +250,9 @@ export class EstimativaGridComponent extends React.Component<EstimativaGridCompo
                     lines: recalculatedLines,
                     estimativa: {
                         ...this.state.estimativa,
-                        smt_horasdedesenvolvimento: totalDevelopmentHours,
-                        smt_horasdesuporte: totalSupportHours,
-                        smt_horasdoprojeto: totalProjectHours
+                        smt_totaldesenvolvimento: totalDevelopmentHours,
+                        smt_totalhorasapoio: totalSupportHours,
+                        smt_totalhorasprojeto: totalProjectHours
                     },
                     isDirty: true
                 });
@@ -327,7 +326,7 @@ export class EstimativaGridComponent extends React.Component<EstimativaGridCompo
             // Update the line with the development type and copy the default description
             this.handleLineChange(lineId, {
                 smt_tipodedesenvolvimentoid: tipoId,
-                smt_tipodedesenvolvimento: tipo.smt_name,
+                smt_tipodedesenvolvimento: tipo.smt_nometipo,
                 smt_descricao: tipo.smt_descricaopadrao || ''
             });
         } catch (error) {
@@ -350,7 +349,18 @@ export class EstimativaGridComponent extends React.Component<EstimativaGridCompo
         }
 
         return (
-            <Stack styles={{ root: { height: '100%', padding: 10 } }} tokens={{ childrenGap: 10 }}>
+            <Stack 
+                styles={{ 
+                    root: { 
+                        height: '100%', 
+                        width: '100%',
+                        padding: '16px',
+                        boxSizing: 'border-box',
+                        overflow: 'auto'
+                    } 
+                }} 
+                tokens={{ childrenGap: 16 }}
+            >
                 {error && (
                     <MessageBar
                         messageBarType={MessageBarType.error}

@@ -6,14 +6,9 @@
 import * as React from 'react';
 import { 
     Stack, 
-    TextField, 
-    Dropdown, 
-    IDropdownOption, 
-    DatePicker, 
     PrimaryButton, 
     DefaultButton,
-    Text,
-    Separator
+    Text
 } from '@fluentui/react';
 import { Estimativa, ModeloDeEstimativa } from '../models';
 
@@ -34,97 +29,163 @@ export const EstimationHeaderComponent: React.FC<EstimationHeaderComponentProps>
     onImportModel,
     isDirty
 }) => {
-    const modeloOptions: IDropdownOption[] = modelosEstimativa.map(modelo => ({
-        key: modelo.smt_modelodeestimativaid || '',
-        text: modelo.smt_name || ''
-    }));
-
-    const formatDate = (date: Date | string | undefined): string => {
-        if (!date) return '';
-        const d = typeof date === 'string' ? new Date(date) : date;
-        return d.toLocaleDateString();
-    };
-
     return (
-        <Stack tokens={{ childrenGap: 15 }} styles={{ root: { backgroundColor: '#f3f2f1', padding: 15, borderRadius: 4 } }}>
-            <Stack horizontal horizontalAlign="space-between" verticalAlign="center">
-                <Text variant="xLarge" styles={{ root: { fontWeight: 600 } }}>
-                    {estimativa.smt_name || 'New Estimation'}
-                </Text>
-                <Stack horizontal tokens={{ childrenGap: 10 }}>
-                    <DefaultButton text="Import Model" onClick={onImportModel} />
-                    <PrimaryButton text="Save" onClick={onSave} disabled={!isDirty} />
-                </Stack>
+        <Stack 
+            tokens={{ childrenGap: 20 }} 
+            styles={{ 
+                root: { 
+                    backgroundColor: '#ffffff', 
+                    padding: '20px 24px', 
+                    borderRadius: 8,
+                    boxShadow: '0 1.6px 3.6px rgba(0,0,0,0.13), 0 0.3px 0.9px rgba(0,0,0,0.11)',
+                    width: '100%',
+                    boxSizing: 'border-box'
+                } 
+            }}
+        >
+            {/* Action Buttons */}
+            <Stack horizontal horizontalAlign="end" tokens={{ childrenGap: 10 }}>
+                <DefaultButton text="Import Model" onClick={onImportModel} />
+                <PrimaryButton text="Save" onClick={onSave} disabled={!isDirty} />
             </Stack>
 
-            <Separator />
+            {/* Total Hours Display - Prominent */}
+            <Stack 
+                horizontal 
+                horizontalAlign="space-around" 
+                wrap
+                tokens={{ childrenGap: 20 }}
+                styles={{ root: { width: '100%' } }}
+            >
+                <Stack 
+                    horizontalAlign="center" 
+                    styles={{ 
+                        root: { 
+                            minWidth: 160,
+                            maxWidth: 220,
+                            padding: '16px 20px',
+                            backgroundColor: '#e6f2ff',
+                            borderRadius: 6,
+                            border: '2px solid #0078d4',
+                            flex: 1
+                        } 
+                    }}
+                >
+                    <Text 
+                        variant="small" 
+                        styles={{ 
+                            root: { 
+                                color: '#323130', 
+                                fontWeight: 600,
+                                marginBottom: 6,
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.3px',
+                                fontSize: 11,
+                                textAlign: 'center'
+                            } 
+                        }}
+                    >
+                        Development Hours
+                    </Text>
+                    <Text 
+                        styles={{ 
+                            root: { 
+                                fontSize: 32, 
+                                fontWeight: 700, 
+                                color: '#0078d4',
+                                lineHeight: 1.1
+                            } 
+                        }}
+                    >
+                        {estimativa.smt_totaldesenvolvimento?.toFixed(2) || '0.00'}
+                    </Text>
+                </Stack>
 
-            <Stack horizontal tokens={{ childrenGap: 15 }}>
-                <Stack styles={{ root: { flex: 1 } }}>
-                    <TextField
-                        label="Name"
-                        value={estimativa.smt_name || ''}
-                        onChange={(_, value) => onChange({ smt_name: value })}
-                        required
-                    />
+                <Stack 
+                    horizontalAlign="center" 
+                    styles={{ 
+                        root: { 
+                            minWidth: 160,
+                            maxWidth: 220,
+                            padding: '16px 20px',
+                            backgroundColor: '#e6f7e6',
+                            borderRadius: 6,
+                            border: '2px solid #107c10',
+                            flex: 1
+                        } 
+                    }}
+                >
+                    <Text 
+                        variant="small" 
+                        styles={{ 
+                            root: { 
+                                color: '#323130', 
+                                fontWeight: 600,
+                                marginBottom: 6,
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.3px',
+                                fontSize: 11,
+                                textAlign: 'center'
+                            } 
+                        }}
+                    >
+                        Support Hours
+                    </Text>
+                    <Text 
+                        styles={{ 
+                            root: { 
+                                fontSize: 32, 
+                                fontWeight: 700, 
+                                color: '#107c10',
+                                lineHeight: 1.1
+                            } 
+                        }}
+                    >
+                        {estimativa.smt_totalhorasapoio?.toFixed(2) || '0.00'}
+                    </Text>
                 </Stack>
-                <Stack styles={{ root: { flex: 1 } }}>
-                    <TextField
-                        label="Opportunity"
-                        value={estimativa.smt_oportunidade || ''}
-                        onChange={(_, value) => onChange({ smt_oportunidade: value })}
-                    />
-                </Stack>
-            </Stack>
 
-            <Stack horizontal tokens={{ childrenGap: 15 }}>
-                <Stack styles={{ root: { flex: 1 } }}>
-                    <Dropdown
-                        label="Estimation Model"
-                        options={modeloOptions}
-                        selectedKey={estimativa.smt_modelodeestimativaid}
-                        onChange={(_, option) => onChange({ 
-                            smt_modelodeestimativaid: option?.key as string,
-                            smt_modelodeestimativa: option?.text 
-                        })}
-                        required
-                    />
-                </Stack>
-                <Stack styles={{ root: { flex: 1 } }}>
-                    <DatePicker
-                        label="Estimated Start Date"
-                        value={estimativa.smt_datadeinicios ? new Date(estimativa.smt_datadeinicios) : undefined}
-                        onSelectDate={(date) => onChange({ smt_datadeinicios: date?.toISOString() })}
-                        formatDate={formatDate}
-                    />
-                </Stack>
-            </Stack>
-
-            <Separator />
-
-            <Stack horizontal tokens={{ childrenGap: 30 }}>
-                <Stack>
-                    <Text variant="small" styles={{ root: { color: '#605e5c', fontWeight: 600 } }}>
-                        Total Development Hours
+                <Stack 
+                    horizontalAlign="center" 
+                    styles={{ 
+                        root: { 
+                            minWidth: 160,
+                            maxWidth: 220,
+                            padding: '16px 20px',
+                            backgroundColor: '#f4f0fa',
+                            borderRadius: 6,
+                            border: '2px solid #8764b8',
+                            flex: 1
+                        } 
+                    }}
+                >
+                    <Text 
+                        variant="small" 
+                        styles={{ 
+                            root: { 
+                                color: '#323130', 
+                                fontWeight: 600,
+                                marginBottom: 6,
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.3px',
+                                fontSize: 11,
+                                textAlign: 'center'
+                            } 
+                        }}
+                    >
+                        Project Hours
                     </Text>
-                    <Text variant="xxLarge" styles={{ root: { fontWeight: 600, color: '#0078d4' } }}>
-                        {estimativa.smt_horasdedesenvolvimento?.toFixed(2) || '0.00'}
-                    </Text>
-                </Stack>
-                <Stack>
-                    <Text variant="small" styles={{ root: { color: '#605e5c', fontWeight: 600 } }}>
-                        Total Support Hours
-                    </Text>
-                    <Text variant="xxLarge" styles={{ root: { fontWeight: 600, color: '#107c10' } }}>
-                        {estimativa.smt_horasdesuporte?.toFixed(2) || '0.00'}
-                    </Text>
-                </Stack>
-                <Stack>
-                    <Text variant="small" styles={{ root: { color: '#605e5c', fontWeight: 600 } }}>
-                        Total Project Hours
-                    </Text>
-                    <Text variant="xxLarge" styles={{ root: { fontWeight: 600, color: '#8764b8' } }}>
-                        {estimativa.smt_horasdoprojeto?.toFixed(2) || '0.00'}
+                    <Text 
+                        styles={{ 
+                            root: { 
+                                fontSize: 32, 
+                                fontWeight: 700, 
+                                color: '#8764b8',
+                                lineHeight: 1.1
+                            } 
+                        }}
+                    >
+                        {estimativa.smt_totalhorasprojeto?.toFixed(2) || '0.00'}
                     </Text>
                 </Stack>
             </Stack>

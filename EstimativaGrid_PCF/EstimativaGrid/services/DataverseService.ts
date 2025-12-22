@@ -30,23 +30,23 @@ export class DataverseService {
     async createEstimativa(estimativa: Estimativa): Promise<ComponentFramework.LookupValue> {
         const record: ComponentFramework.WebApi.Entity = {};
         
-        if (estimativa.smt_name) record['smt_name'] = estimativa.smt_name;
+        if (estimativa.smt_nome) record['smt_nome'] = estimativa.smt_nome;
         if (estimativa.smt_oportunidade) record['smt_oportunidade'] = estimativa.smt_oportunidade;
-        if (estimativa.smt_horasdedesenvolvimento !== undefined) 
-            record['smt_horasdedesenvolvimento'] = estimativa.smt_horasdedesenvolvimento;
-        if (estimativa.smt_horasdesuporte !== undefined) 
-            record['smt_horasdesuporte'] = estimativa.smt_horasdesuporte;
-        if (estimativa.smt_horasdoprojeto !== undefined) 
-            record['smt_horasdoprojeto'] = estimativa.smt_horasdoprojeto;
+        if (estimativa.smt_totaldesenvolvimento !== undefined) 
+            record['smt_totaldesenvolvimento'] = estimativa.smt_totaldesenvolvimento;
+        if (estimativa.smt_totalhorasapoio !== undefined) 
+            record['smt_totalhorasapoio'] = estimativa.smt_totalhorasapoio;
+        if (estimativa.smt_totalhorasprojeto !== undefined) 
+            record['smt_totalhorasprojeto'] = estimativa.smt_totalhorasprojeto;
         if (estimativa.smt_modelodeestimativaid) 
             record['smt_modelodeestimativa@odata.bind'] = `/smt_modelodeestimativas(${estimativa.smt_modelodeestimativaid})`;
-        if (estimativa.smt_datadeinicios) 
-            record['smt_datadeinicios'] = estimativa.smt_datadeinicios;
+        if (estimativa.smt_datainicioestimada) 
+            record['smt_datainicioestimada'] = estimativa.smt_datainicioestimada;
 
         const result = await this.webAPI.createRecord('smt_estimativa', record);
         return {
             id: result.id,
-            name: estimativa.smt_name || '',
+            name: estimativa.smt_nome || '',
             entityType: 'smt_estimativa'
         };
     }
@@ -57,19 +57,18 @@ export class DataverseService {
     async updateEstimativa(estimativaId: string, estimativa: Partial<Estimativa>): Promise<void> {
         const record: ComponentFramework.WebApi.Entity = {};
         
-        if (estimativa.smt_name !== undefined) record['smt_name'] = estimativa.smt_name;
+        if (estimativa.smt_nome !== undefined) record['smt_nome'] = estimativa.smt_nome;
         if (estimativa.smt_oportunidade !== undefined) record['smt_oportunidade'] = estimativa.smt_oportunidade;
-        if (estimativa.smt_horasdedesenvolvimento !== undefined) 
-            record['smt_horasdedesenvolvimento'] = estimativa.smt_horasdedesenvolvimento;
-        if (estimativa.smt_horasdesuporte !== undefined) 
-            record['smt_horasdesuporte'] = estimativa.smt_horasdesuporte;
-        if (estimativa.smt_horasdoprojeto !== undefined) 
-            record['smt_horasdoprojeto'] = estimativa.smt_horasdoprojeto;
+        if (estimativa.smt_totaldesenvolvimento !== undefined) 
+            record['smt_totaldesenvolvimento'] = estimativa.smt_totaldesenvolvimento;
+        if (estimativa.smt_totalhorasapoio !== undefined) 
+            record['smt_totalhorasapoio'] = estimativa.smt_totalhorasapoio;
+        if (estimativa.smt_totalhorasprojeto !== undefined) 
+            record['smt_totalhorasprojeto'] = estimativa.smt_totalhorasprojeto;
         if (estimativa.smt_modelodeestimativaid) 
             record['smt_modelodeestimativa@odata.bind'] = `/smt_modelodeestimativas(${estimativa.smt_modelodeestimativaid})`;
-        if (estimativa.smt_datadeinicios !== undefined) 
-            record['smt_datadeinicios'] = estimativa.smt_datadeinicios;
-
+        if (estimativa.smt_datainicioestimada !== undefined) 
+            record['smt_datainicioestimada'] = estimativa.smt_datainicioestimada;
         await this.webAPI.updateRecord('smt_estimativa', estimativaId, record);
     }
 
@@ -80,20 +79,20 @@ export class DataverseService {
         const result = await this.webAPI.retrieveRecord(
             'smt_estimativa',
             estimativaId,
-            '?$select=smt_estimativaid,smt_name,smt_oportunidade,smt_horasdedesenvolvimento,smt_horasdesuporte,smt_horasdoprojeto,smt_datadeinicios,smt_numeroid&$expand=smt_modelodeestimativa($select=smt_modelodeestimativaid,smt_name)'
+            '?$select=smt_estimativaid,smt_nome,smt_oportunidade,smt_totaldesenvolvimento,smt_totalhorasapoio,smt_totalhorasprojeto,smt_datadeinicios,smt_numeroid&$expand=smt_modelodeestimativa($select=smt_modelodeestimativaid,smt_nomemodelo)'
         );
 
         return {
             smt_estimativaid: result.smt_estimativaid,
-            smt_name: result.smt_name,
+            smt_nome: result.smt_nome,
             smt_oportunidade: result.smt_oportunidade,
-            smt_horasdedesenvolvimento: result.smt_horasdedesenvolvimento,
-            smt_horasdesuporte: result.smt_horasdesuporte,
-            smt_horasdoprojeto: result.smt_horasdoprojeto,
+            smt_totaldesenvolvimento: result.smt_totaldesenvolvimento,
+            smt_totalhorasapoio: result.smt_totalhorasapoio,
+            smt_totalhorasprojeto: result.smt_totalhorasprojeto,
             smt_modelodeestimativaid: result._smt_modelodeestimativa_value,
-            smt_modelodeestimativa: result.smt_modelodeestimativa?.smt_name,
-            smt_datadeinicios: result.smt_datadeinicios,
-            smt_numeroid: result.smt_numeroid
+            smt_modelodeestimativa: result.smt_modelodeestimativa?.smt_nomemodelo,
+            smt_datainicioestimada: result.smt_datainicioestimada,
+            versionnumber: result.smt_numeroid
         };
     }
 
@@ -115,7 +114,7 @@ export class DataverseService {
             record['smt_tipodedesenvolvimento@odata.bind'] = `/smt_tipodedesenvolvimentos(${linha.smt_tipodedesenvolvimentoid})`;
         
         if (linha.smt_modulo) record['smt_modulo'] = linha.smt_modulo;
-        if (linha.smt_requisitodocliente) record['smt_requisitodocliente'] = linha.smt_requisitodocliente;
+        if (linha.smt_requisitocliente) record['smt_requisitocliente'] = linha.smt_requisitocliente;
         if (linha.smt_funcionalidade) record['smt_funcionalidade'] = linha.smt_funcionalidade;
         if (linha.smt_descricao) record['smt_descricao'] = linha.smt_descricao;
         if (linha.smt_observacoestecnicas) record['smt_observacoestecnicas'] = linha.smt_observacoestecnicas;
@@ -123,9 +122,9 @@ export class DataverseService {
         if (linha.smt_estimativafinal !== undefined) record['smt_estimativafinal'] = linha.smt_estimativafinal;
         if (linha.smt_tipodeatividade) record['smt_tipodeatividade'] = linha.smt_tipodeatividade;
         if (linha.smt_complexidade) record['smt_complexidade'] = linha.smt_complexidade;
-        if (linha.smt_percentualdedesenvolvimento !== undefined) 
-            record['smt_percentualdedesenvolvimento'] = linha.smt_percentualdedesenvolvimento;
-        if (linha.smt_ordem !== undefined) record['smt_ordem'] = linha.smt_ordem;
+        if (linha.smt_dedesenvolvimento !== undefined) 
+            record['smt_dedesenvolvimento'] = linha.smt_dedesenvolvimento;
+        //if (linha.smt_ordem !== undefined) record['smt_ordem'] = linha.smt_ordem;
 
         const result = await this.webAPI.createRecord('smt_linhadeestimativa', record);
         return {
@@ -164,7 +163,7 @@ export class DataverseService {
         }
         
         if (linha.smt_modulo !== undefined) record['smt_modulo'] = linha.smt_modulo;
-        if (linha.smt_requisitodocliente !== undefined) record['smt_requisitodocliente'] = linha.smt_requisitodocliente;
+        if (linha.smt_requisitocliente !== undefined) record['smt_requisitocliente'] = linha.smt_requisitocliente;
         if (linha.smt_funcionalidade !== undefined) record['smt_funcionalidade'] = linha.smt_funcionalidade;
         if (linha.smt_descricao !== undefined) record['smt_descricao'] = linha.smt_descricao;
         if (linha.smt_observacoestecnicas !== undefined) record['smt_observacoestecnicas'] = linha.smt_observacoestecnicas;
@@ -172,9 +171,9 @@ export class DataverseService {
         if (linha.smt_estimativafinal !== undefined) record['smt_estimativafinal'] = linha.smt_estimativafinal;
         if (linha.smt_tipodeatividade !== undefined) record['smt_tipodeatividade'] = linha.smt_tipodeatividade;
         if (linha.smt_complexidade !== undefined) record['smt_complexidade'] = linha.smt_complexidade;
-        if (linha.smt_percentualdedesenvolvimento !== undefined) 
-            record['smt_percentualdedesenvolvimento'] = linha.smt_percentualdedesenvolvimento;
-        if (linha.smt_ordem !== undefined) record['smt_ordem'] = linha.smt_ordem;
+        if (linha.smt_dedesenvolvimento !== undefined) 
+            record['smt_dedesenvolvimento'] = linha.smt_dedesenvolvimento;
+        //if (linha.smt_ordem !== undefined) record['smt_ordem'] = linha.smt_ordem;
 
         await this.webAPI.updateRecord('smt_linhadeestimativa', linhaId, record);
     }
@@ -220,15 +219,15 @@ export class DataverseService {
                     <order attribute="smt_ordem" descending="false" />
                     <link-entity name="smt_fase" from="smt_faseid" to="smt_fase" alias="fase" link-type="outer">
                         <attribute name="smt_faseid" />
-                        <attribute name="smt_name" />
+                        <attribute name="smt_nomefase" />
                     </link-entity>
                     <link-entity name="smt_subfase" from="smt_subfaseid" to="smt_subfase" alias="subfase" link-type="outer">
                         <attribute name="smt_subfaseid" />
-                        <attribute name="smt_name" />
+                        <attribute name="smt_nomesubfase" />
                     </link-entity>
                     <link-entity name="smt_tipodedesenvolvimento" from="smt_tipodedesenvolvimentoid" to="smt_tipodedesenvolvimento" alias="tipo" link-type="outer">
                         <attribute name="smt_tipodedesenvolvimentoid" />
-                        <attribute name="smt_name" />
+                        <attribute name="smt_nometipo" />
                     </link-entity>
                 </entity>
             </fetch>
@@ -240,11 +239,11 @@ export class DataverseService {
             smt_linhadeestimativaid: entity.smt_linhadeestimativaid,
             smt_estimativaid: estimativaId,
             smt_faseid: entity['_smt_fase_value'],
-            smt_fase: entity['fase.smt_name'],
+            smt_fase: entity['fase.smt_nomefase'],
             smt_subfaseid: entity['_smt_subfase_value'],
-            smt_subfase: entity['subfase.smt_name'],
+            smt_subfase: entity['subfase.smt_nomesubfase'],
             smt_tipodedesenvolvimentoid: entity['_smt_tipodedesenvolvimento_value'],
-            smt_tipodedesenvolvimento: entity['tipo.smt_name'],
+            smt_tipodedesenvolvimento: entity['tipo.smt_nometipo'],
             smt_modulo: entity.smt_modulo,
             smt_requisitodocliente: entity.smt_requisitodocliente,
             smt_funcionalidade: entity.smt_funcionalidade,
@@ -268,13 +267,13 @@ export class DataverseService {
     async retrieveFases(): Promise<Fase[]> {
         const result = await this.webAPI.retrieveMultipleRecords(
             'smt_fase',
-            '?$select=smt_faseid,smt_name,smt_exibirnalinha,smt_ordem,smt_cor&$orderby=smt_ordem asc'
+            '?$select=smt_faseid,smt_nomefase,smt_exibirnocronograma,smt_ordem,smt_cor&$orderby=smt_ordem asc'
         );
         
         return result.entities.map(entity => ({
             smt_faseid: entity.smt_faseid,
-            smt_name: entity.smt_name,
-            smt_exibirnalinha: entity.smt_exibirnalinha,
+            smt_nomefase: entity.smt_nomefase,
+            smt_exibirnocronograma: entity.smt_exibirnocronograma,
             smt_ordem: entity.smt_ordem,
             smt_cor: entity.smt_cor
         }));
@@ -286,14 +285,14 @@ export class DataverseService {
     async retrieveSubfases(): Promise<Subfase[]> {
         const result = await this.webAPI.retrieveMultipleRecords(
             'smt_subfase',
-            '?$select=smt_subfaseid,smt_name,smt_ordem,smt_ordemproposta,smt_cor&$expand=smt_fase($select=smt_faseid,smt_name)&$orderby=smt_ordem asc'
+            '?$select=smt_subfaseid,smt_nomesubfase,smt_ordem,smt_ordemproposta,smt_cor&$expand=smt_Fase($select=smt_faseid,smt_nomefase)&$orderby=smt_ordem asc'
         );
         
         return result.entities.map(entity => ({
             smt_subfaseid: entity.smt_subfaseid,
-            smt_name: entity.smt_name,
+            smt_nomesubfase: entity.smt_nomesubfase,
             smt_faseid: entity._smt_fase_value,
-            smt_fase: entity.smt_fase?.smt_name,
+            smt_fase: entity.smt_fase?.smt_nomefase,
             smt_ordem: entity.smt_ordem,
             smt_ordemproposta: entity.smt_ordemproposta,
             smt_cor: entity.smt_cor
@@ -306,12 +305,12 @@ export class DataverseService {
     async retrieveTiposDeDesenvolvimento(): Promise<TipoDeDesenvolvimento[]> {
         const result = await this.webAPI.retrieveMultipleRecords(
             'smt_tipodedesenvolvimento',
-            '?$select=smt_tipodedesenvolvimentoid,smt_name,smt_descricaopadrao'
+            '?$select=smt_tipodedesenvolvimentoid,smt_nometipo,smt_descricaopadrao'
         );
         
         return result.entities.map(entity => ({
             smt_tipodedesenvolvimentoid: entity.smt_tipodedesenvolvimentoid,
-            smt_name: entity.smt_name,
+            smt_nometipo: entity.smt_nometipo,
             smt_descricaopadrao: entity.smt_descricaopadrao
         }));
     }
@@ -323,12 +322,12 @@ export class DataverseService {
         const result = await this.webAPI.retrieveRecord(
             'smt_tipodedesenvolvimento',
             tipoId,
-            '?$select=smt_tipodedesenvolvimentoid,smt_name,smt_descricaopadrao'
+            '?$select=smt_tipodedesenvolvimentoid,smt_nometipo,smt_descricaopadrao'
         );
         
         return {
             smt_tipodedesenvolvimentoid: result.smt_tipodedesenvolvimentoid,
-            smt_name: result.smt_name,
+            smt_nometipo: result.smt_nometipo,
             smt_descricaopadrao: result.smt_descricaopadrao
         };
     }
@@ -341,12 +340,12 @@ export class DataverseService {
     async retrieveModelosDeEstimativa(): Promise<ModeloDeEstimativa[]> {
         const result = await this.webAPI.retrieveMultipleRecords(
             'smt_modelodeestimativa',
-            '?$select=smt_modelodeestimativaid,smt_name'
+            '?$select=smt_modelodeestimativaid,smt_nomemodelo'
         );
         
         return result.entities.map(entity => ({
             smt_modelodeestimativaid: entity.smt_modelodeestimativaid,
-            smt_name: entity.smt_name
+            smt_nomemodelo: entity.smt_nomemodelo
         }));
     }
 
@@ -429,15 +428,15 @@ export class DataverseService {
                 smt_subfaseid: modelLine.smt_subfaseid,
                 smt_tipodedesenvolvimentoid: modelLine.smt_tipodedesenvolvimentoid,
                 smt_modulo: modelLine.smt_modulo,
-                smt_requisitodocliente: modelLine.smt_requisitodocliente,
+                smt_requisitocliente: modelLine.smt_requisitodocliente,
                 smt_funcionalidade: modelLine.smt_funcionalidade,
                 smt_descricao: modelLine.smt_descricao,
                 smt_observacoestecnicas: modelLine.smt_observacoestecnicas,
                 smt_dimensionamento: modelLine.smt_dimensionamento,
                 smt_tipodeatividade: modelLine.smt_tipodeatividade,
                 smt_complexidade: modelLine.smt_complexidade,
-                smt_percentualdedesenvolvimento: modelLine.smt_percentualdedesenvolvimento,
-                smt_ordem: startingOrder + i,
+                smt_dedesenvolvimento: modelLine.smt_dodesenvolvimento,
+                // smt_ordem: startingOrder + i,
                 smt_estimativafinal: 0
             };
 

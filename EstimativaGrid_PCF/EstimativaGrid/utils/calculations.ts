@@ -132,7 +132,7 @@ export function recalculateAllLines(lines: LinhaDeEstimativa[]): LinhaDeEstimati
             return {
                 ...line,
                 smt_dimensionamento: calculateSupportDimensioning(
-                    line.smt_percentualdedesenvolvimento || 0,
+                    line.smt_dedesenvolvimento || 0,
                     totalDevelopmentHours
                 )
             };

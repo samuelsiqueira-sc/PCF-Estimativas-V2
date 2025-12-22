@@ -9,15 +9,15 @@ import { ActivityType, Complexity } from './enums';
  */
 export interface Estimativa {
     smt_estimativaid?: string;
-    smt_name?: string;
+    smt_nome?: string;
     smt_oportunidade?: string; // opportunity
-    smt_horasdedesenvolvimento?: number; // total development hours
-    smt_horasdesuporte?: number; // total support hours
-    smt_horasdoprojeto?: number; // total project hours
+    smt_totaldesenvolvimento?: number; // total development hours
+    smt_totalhorasapoio?: number; // total support hours
+    smt_totalhorasprojeto?: number; // total project hours
     smt_modelodeestimativa?: string; // lookup to estimation model (required)
     smt_modelodeestimativaid?: string;
-    smt_datadeinicios?: Date | string; // estimated start date
-    smt_numeroid?: string; // auto-numbered ID
+    smt_datainicioestimada?: Date | string; // estimated start date
+    versionnumber?: string; // auto-numbered ID
 }
 
 /**
@@ -32,7 +32,7 @@ export interface LinhaDeEstimativa {
     smt_subfase?: string; // lookup to subphase
     smt_subfaseid?: string;
     smt_modulo?: string; // module (text)
-    smt_requisitodocliente?: string; // customer requirement (text)
+    smt_requisitocliente?: string; // customer requirement (text)
     smt_funcionalidade?: string; // functionality (text)
     smt_descricao?: string; // description (text)
     smt_observacoestecnicas?: string; // technical notes (text)
@@ -42,9 +42,9 @@ export interface LinhaDeEstimativa {
     smt_tipodedesenvolvimento?: string; // lookup to development type
     smt_tipodedesenvolvimentoid?: string;
     smt_complexidade?: Complexity | string; // complexity
-    smt_numeroid?: string; // auto-numbered ID
-    smt_percentualdedesenvolvimento?: number; // percentage of development (for Support activities)
-    smt_ordem?: number; // order
+    versionnumber?: string; // auto-numbered ID
+    smt_dedesenvolvimento?: number; // percentage of development (for Support activities)
+   // smt_ordem?: number; // order
 }
 
 /**
@@ -52,14 +52,14 @@ export interface LinhaDeEstimativa {
  */
 export interface ModeloDeEstimativa {
     smt_modelodeestimativaid?: string;
-    smt_name?: string;
+    smt_nomemodelo?: string;
 }
 
 /**
  * smt_linhademodelodeestimativa (Estimation Model Line)
  */
 export interface LinhaDeModeloDeEstimativa {
-    smt_linhademodelodeestimativaid?: string;
+    smt_linhamodeloid?: string;
     smt_modelodeestimativa?: string; // lookup to estimation model
     smt_modelodeestimativaid?: string;
     smt_fase?: string; // lookup to phase
@@ -76,8 +76,8 @@ export interface LinhaDeModeloDeEstimativa {
     smt_tipodedesenvolvimento?: string;
     smt_tipodedesenvolvimentoid?: string;
     smt_complexidade?: Complexity | string;
-    smt_percentualdedesenvolvimento?: number;
-    smt_ordem?: number;
+    smt_dodesenvolvimento?: number;
+    //smt_ordem?: number;
 }
 
 /**
@@ -85,7 +85,7 @@ export interface LinhaDeModeloDeEstimativa {
  */
 export interface TipoDeDesenvolvimento {
     smt_tipodedesenvolvimentoid?: string;
-    smt_name?: string;
+    smt_nometipo?: string;
     smt_descricaopadrao?: string; // default description
 }
 
@@ -94,8 +94,8 @@ export interface TipoDeDesenvolvimento {
  */
 export interface Fase {
     smt_faseid?: string;
-    smt_name?: string;
-    smt_exibirnalinha?: boolean; // display in timeline flag
+    smt_nomefase?: string;
+    smt_exibirnocronograma?: boolean; // display in timeline flag
     smt_ordem?: number; // order
     smt_cor?: string; // color (hex code)
 }
@@ -105,7 +105,7 @@ export interface Fase {
  */
 export interface Subfase {
     smt_subfaseid?: string;
-    smt_name?: string;
+    smt_nomesubfase?: string;
     smt_fase?: string; // lookup to phase
     smt_faseid?: string;
     smt_ordem?: number; // order
@@ -118,5 +118,5 @@ export interface Subfase {
  */
 export interface PlanoDeEquipe {
     smt_planodeequipeid?: string;
-    smt_name?: string;
+    smt_nomeplano?: string;
 }

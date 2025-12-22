@@ -64,7 +64,7 @@ export const ModelImportDialog: React.FC<ModelImportDialogProps> = ({
                     modelos.map(modelo => (
                         <Checkbox
                             key={modelo.smt_modelodeestimativaid}
-                            label={modelo.smt_name}
+                            label={modelo.smt_nomemodelo}
                             checked={selectedModels.has(modelo.smt_modelodeestimativaid || '')}
                             onChange={(_, checked) => handleToggleModel(modelo.smt_modelodeestimativaid || '', checked || false)}
                         />
