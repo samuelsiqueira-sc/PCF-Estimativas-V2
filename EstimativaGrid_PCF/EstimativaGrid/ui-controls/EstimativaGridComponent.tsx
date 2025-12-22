@@ -98,9 +98,12 @@ export class EstimativaGridComponent extends React.Component<EstimativaGridCompo
                 });
             }
         } catch (error) {
+            const errorMessage = error instanceof Error 
+                ? `Failed to load data: ${error.message}` 
+                : 'Failed to load data. Please check your connection and try again.';
             this.setState({
                 loading: false,
-                error: `Failed to load data: ${error}`
+                error: errorMessage
             });
         }
     }
@@ -140,8 +143,13 @@ export class EstimativaGridComponent extends React.Component<EstimativaGridCompo
     };
 
     private handleAddLine = (): void => {
+        // Use crypto.randomUUID if available, fallback to timestamp-based ID
+        const uniqueId = typeof crypto !== 'undefined' && crypto.randomUUID 
+            ? crypto.randomUUID() 
+            : `new-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+            
         const newLine: LinhaDeEstimativa = {
-            smt_linhadeestimativaid: `new-${Date.now()}`, // temporary ID
+            smt_linhadeestimativaid: uniqueId,
             smt_estimativaid: this.props.estimativaId,
             smt_tipodeatividade: 'Development',
             smt_dimensionamento: 0,
@@ -161,7 +169,7 @@ export class EstimativaGridComponent extends React.Component<EstimativaGridCompo
 
         // Prevent deletion of Process and Support lines
         if (line.smt_tipodeatividade === 'Process' || line.smt_tipodeatividade === 'Support') {
-            this.setState({ error: 'Cannot delete Process or Support lines' });
+            this.setState({ error: 'Process and Support lines cannot be deleted as they are required for estimation calculations.' });
             return;
         }
 
@@ -192,7 +200,10 @@ export class EstimativaGridComponent extends React.Component<EstimativaGridCompo
                 };
             });
         } catch (error) {
-            this.setState({ error: `Failed to delete line: ${error}` });
+            const errorMessage = error instanceof Error 
+                ? `Failed to delete line: ${error.message}` 
+                : 'Failed to delete line. Please try again.';
+            this.setState({ error: errorMessage });
         }
     };
 
@@ -248,9 +259,12 @@ export class EstimativaGridComponent extends React.Component<EstimativaGridCompo
                 });
             }
         } catch (error) {
+            const errorMessage = error instanceof Error 
+                ? `Failed to import model: ${error.message}` 
+                : 'Failed to import model. Please ensure the estimation is saved first.';
             this.setState({
                 loading: false,
-                error: `Failed to import model: ${error}`
+                error: errorMessage
             });
         }
     };
@@ -295,9 +309,12 @@ export class EstimativaGridComponent extends React.Component<EstimativaGridCompo
                 await this.loadData();
             }
         } catch (error) {
+            const errorMessage = error instanceof Error 
+                ? `Failed to save changes: ${error.message}` 
+                : 'Failed to save changes. Please check required fields and try again.';
             this.setState({
                 loading: false,
-                error: `Failed to save: ${error}`
+                error: errorMessage
             });
         }
     };
@@ -314,7 +331,10 @@ export class EstimativaGridComponent extends React.Component<EstimativaGridCompo
                 smt_descricao: tipo.smt_descricaopadrao || ''
             });
         } catch (error) {
-            this.setState({ error: `Failed to retrieve development type: ${error}` });
+            const errorMessage = error instanceof Error 
+                ? `Failed to retrieve development type: ${error.message}` 
+                : 'Failed to retrieve development type details.';
+            this.setState({ error: errorMessage });
         }
     };
 

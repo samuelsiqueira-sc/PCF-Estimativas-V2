@@ -95,9 +95,13 @@ export const EstimationLinesGridComponent: React.FC<EstimationLinesGridComponent
                 value={String(item[fieldName] !== undefined ? item[fieldName] : '')}
                 onChange={(_, value) => {
                     const numValue = parseFloat(value || '0');
-                    onChange(item.smt_linhadeestimativaid || '', { [fieldName]: isNaN(numValue) ? 0 : numValue });
+                    // Prevent negative values for dimensioning and percentage fields
+                    const validValue = isNaN(numValue) ? 0 : Math.max(0, numValue);
+                    onChange(item.smt_linhadeestimativaid || '', { [fieldName]: validValue });
                 }}
                 type="number"
+                min="0"
+                step={decimalPlaces === 2 ? "0.01" : "1"}
                 borderless
                 styles={{ root: { width: '100%' }, field: { fontSize: 12 } }}
             />

@@ -35,8 +35,19 @@ export function calculateTotalProjectHours(developmentHours: number, supportHour
 /**
  * Calculate support ratio
  * Ratio of total support hours to total development hours
+ * @param totalSupportHours - Total support hours (must be non-negative)
+ * @param totalDevelopmentHours - Total development hours (must be non-negative)
+ * @returns The support ratio, or 0 if development hours is 0
  */
 export function calculateSupportRatio(totalSupportHours: number, totalDevelopmentHours: number): number {
+    // Validate inputs
+    if (isNaN(totalSupportHours) || isNaN(totalDevelopmentHours) || 
+        !isFinite(totalSupportHours) || !isFinite(totalDevelopmentHours)) {
+        return 0;
+    }
+    if (totalSupportHours < 0 || totalDevelopmentHours < 0) {
+        return 0;
+    }
     if (totalDevelopmentHours === 0) return 0;
     return totalSupportHours / totalDevelopmentHours;
 }

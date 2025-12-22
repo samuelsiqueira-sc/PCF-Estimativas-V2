@@ -23,6 +23,9 @@ export class DataverseService {
 
     /**
      * Create a new estimation
+     * @param estimativa - Estimation data to create
+     * @returns A LookupValue containing the created estimation's ID and name
+     * @throws Error if the creation fails or required fields are missing
      */
     async createEstimativa(estimativa: Estimativa): Promise<ComponentFramework.LookupValue> {
         const record: ComponentFramework.WebApi.Entity = {};
@@ -185,8 +188,16 @@ export class DataverseService {
 
     /**
      * Retrieve estimation lines for a specific estimation
+     * @param estimativaId - GUID of the estimation (validated to be a valid GUID format)
+     * @returns Array of estimation lines
      */
     async retrieveLinhasDeEstimativa(estimativaId: string): Promise<LinhaDeEstimativa[]> {
+        // Validate GUID format
+        const guidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (!guidRegex.test(estimativaId)) {
+            throw new Error('Invalid estimation ID format');
+        }
+        
         const fetchXml = `
             <fetch>
                 <entity name="smt_linhadeestimativa">
