@@ -285,13 +285,13 @@ export class DataverseService {
         
         // Only include lookup IDs, not navigation property names
         if (linha.smt_estimativaid) 
-            record['smt_Estimativa@odata.bind'] = `/smt_estimativas(${linha.smt_estimativaid})`;
+            record['smt_estimativa@odata.bind'] = `/smt_estimativas(${linha.smt_estimativaid})`;
         if (linha.smt_faseid) 
-            record['smt_Fase@odata.bind'] = `/smt_fases(${linha.smt_faseid})`;
+            record['smt_fase@odata.bind'] = `/smt_fases(${linha.smt_faseid})`;
         if (linha.smt_subfaseid) 
-            record['smt_Subfase@odata.bind@odata.bind'] = `/smt_subfases(${linha.smt_subfaseid})`;
+            record['smt_subfase@odata.bind'] = `/smt_subfases(${linha.smt_subfaseid})`;
         if (linha.smt_tipodedesenvolvimentoid) 
-            record['smt_TipodeDesenvolvimento@odata.bind'] = `/smt_tipodedesenvolvimentos(${linha.smt_tipodedesenvolvimentoid})`;
+            record['smt_tipodedesenvolvimento@odata.bind'] = `/smt_tipodedesenvolvimentos(${linha.smt_tipodedesenvolvimentoid})`;
         
         // Add regular properties (never add smt_fase, smt_subfase, smt_tipodedesenvolvimento, smt_estimativa)
         if (linha.smt_modulo) record['smt_modulo'] = linha.smt_modulo;

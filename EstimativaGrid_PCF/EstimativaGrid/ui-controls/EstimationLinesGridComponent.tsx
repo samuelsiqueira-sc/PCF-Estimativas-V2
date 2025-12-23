@@ -70,17 +70,17 @@ export const EstimationLinesGridComponent: React.FC<EstimationLinesGridComponent
         ];
 
     const faseOptions: IDropdownOption[] = fases.map(fase => ({
-        key: fase.smt_faseid || '',
+        key: (fase.smt_faseid || '').toLowerCase(),
         text: fase.smt_nomefase || ''
     }));
 
     const subfaseOptions: IDropdownOption[] = subfases.map(subfase => ({
-        key: subfase.smt_subfaseid || '',
+        key: (subfase.smt_subfaseid || '').toLowerCase(),
         text: subfase.smt_nomesubfase || ''
     }));
 
     const tipoDesenvolvimentoOptions: IDropdownOption[] = tiposDesenvolvimento.map(tipo => ({
-        key: tipo.smt_tipodedesenvolvimentoid || '',
+        key: (tipo.smt_tipodedesenvolvimentoid || '').toLowerCase(),
         text: tipo.smt_nometipo || ''
     }));
 
@@ -129,10 +129,14 @@ export const EstimationLinesGridComponent: React.FC<EstimationLinesGridComponent
         options: IDropdownOption[],
         onChange: (lineId: string, value: string) => void
     ): JSX.Element => {
+        const selectedKey = item[fieldName] as string;
+        // Normalize GUID to lowercase for consistent matching
+        const normalizedKey = selectedKey?.toLowerCase();
+        
         return (
             <Dropdown
                 options={options}
-                selectedKey={item[fieldName] as string}
+                selectedKey={normalizedKey}
                 onChange={(_, option) => onChange(item.smt_linhadeestimativaid || '', option?.key as string)}
                 styles={{ root: { width: '100%' }, dropdown: { fontSize: 12 } }}
             />
@@ -178,9 +182,14 @@ export const EstimationLinesGridComponent: React.FC<EstimationLinesGridComponent
             minWidth: 120,
             maxWidth: 120,
             onRender: (item: LinhaDeEstimativa) => 
-                renderDropdown(item, 'smt_faseid', faseOptions, (lineId, value) => 
-                    onChange(lineId, { smt_faseid: value })
-                )
+                renderDropdown(item, 'smt_faseid', faseOptions, (lineId, value) => {
+                    // Find the fase by lowercase comparison
+                    const selectedFase = fases.find(f => (f.smt_faseid || '').toLowerCase() === value.toLowerCase());
+                    onChange(lineId, { 
+                        smt_faseid: selectedFase?.smt_faseid,
+                        smt_fase: selectedFase?.smt_nomefase 
+                    });
+                })
         },
         {
             key: 'subphase',
@@ -189,9 +198,14 @@ export const EstimationLinesGridComponent: React.FC<EstimationLinesGridComponent
             minWidth: 120,
             maxWidth: 120,
             onRender: (item: LinhaDeEstimativa) => 
-                renderDropdown(item, 'smt_subfaseid', subfaseOptions, (lineId, value) => 
-                    onChange(lineId, { smt_subfaseid: value })
-                )
+                renderDropdown(item, 'smt_subfaseid', subfaseOptions, (lineId, value) => {
+                    // Find the subfase by lowercase comparison
+                    const selectedSubfase = subfases.find(s => (s.smt_subfaseid || '').toLowerCase() === value.toLowerCase());
+                    onChange(lineId, { 
+                        smt_subfaseid: selectedSubfase?.smt_subfaseid,
+                        smt_subfase: selectedSubfase?.smt_nomesubfase 
+                    });
+                })
         },
         {
             key: 'module',
@@ -224,7 +238,13 @@ export const EstimationLinesGridComponent: React.FC<EstimationLinesGridComponent
             minWidth: 120,
             maxWidth: 150,
             onRender: (item: LinhaDeEstimativa) => 
-                renderDropdown(item, 'smt_tipodedesenvolvimentoid', tipoDesenvolvimentoOptions, onDevelopmentTypeChange)
+                renderDropdown(item, 'smt_tipodedesenvolvimentoid', tipoDesenvolvimentoOptions, (lineId, value) => {
+                    // Find the tipo by lowercase comparison to get the original GUID
+                    const selectedTipo = tiposDesenvolvimento.find(t => (t.smt_tipodedesenvolvimentoid || '').toLowerCase() === value.toLowerCase());
+                    if (selectedTipo?.smt_tipodedesenvolvimentoid) {
+                        onDevelopmentTypeChange(lineId, selectedTipo.smt_tipodedesenvolvimentoid);
+                    }
+                })
         },
         {
             key: 'complexity',
