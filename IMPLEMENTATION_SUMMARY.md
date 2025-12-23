@@ -40,26 +40,41 @@ EstimativaGrid_PCF/EstimativaGrid/
 - `retrieveFases()` / `retrieveSubfases()` / `retrieveTiposDeDesenvolvimento()` - Lookup data
 - `retrieveModelosDeEstimativa()` / `retrieveLinhasDeModelo()` - Model data
 - `importModeloDeEstimativa()` - Import model lines into estimation
+- `getActivityTypeLabels()` / `getComplexityLabels()` - Get dynamic option set labels (sorted by value)
+- `getDevelopmentLabel()` / `getProcessLabel()` / `getSupportLabel()` - Get semantic type labels
 
 **Features**:
+- **Dynamic Option Set Handling**: Automatically fetches option set labels from Dataverse on initialization
+- **Bidirectional Conversion**: Converts between integer values and localized label strings
+- **Localization Support**: Works with any Dataverse language configuration (English, Portuguese, etc.)
 - GUID validation for security
 - Proper OData bind syntax for lookups
 - FetchXML queries for complex retrieval
 - JSDoc documentation
 
+**Option Set Management**:
+The service maintains internal mappings between option set labels and their integer values:
+- `activityTypeMapping`: label → integer (e.g., "Development" → 922340000)
+- `activityTypeReverseMapping`: integer → label (e.g., 922340000 → "Development")
+- `complexityMapping` / `complexityReverseMapping`: Similar for complexity values
+
+These mappings are initialized by querying existing records to get the actual labels configured in Dataverse using `@OData.Community.Display.V1.FormattedValue`. Fallback to English labels if no records exist.
+
 ### 2. Calculations (utils/calculations.ts)
 **Purpose**: All business logic for calculations
 
 **Key Functions**:
-- `calculateTotalDevelopmentHours()` - Sum dimensioning for Development lines
-- `calculateTotalSupportHours()` - Sum dimensioning for Support lines
+- `calculateTotalDevelopmentHours(lines, developmentLabel?)` - Sum dimensioning for Development lines
+- `calculateTotalSupportHours(lines, supportLabel?)` - Sum dimensioning for Support lines
 - `calculateSupportRatio()` - Support hours / Development hours
 - `calculateDevelopmentEstimation()` - Dimensioning × (1 + Support Ratio), rounded up
 - `calculateSupportDimensioning()` - (% Dev × Total Dev Hours), rounded up
 - `calculateProcessEstimation()` - Dimensioning (unchanged)
-- `recalculateAllLines()` - Orchestrates full recalculation
+- `recalculateAllLines(lines, developmentLabel?, processLabel?, supportLabel?)` - Orchestrates full recalculation
 
 **Features**:
+- **Localization Support**: All functions accept optional semantic label parameters to work with any Dataverse language
+- **Flexible Type Checking**: Uses provided labels or falls back to default English enums
 - NaN/Infinity validation
 - Negative number handling
 - Support ratio calculation
@@ -88,6 +103,11 @@ EstimativaGrid_PCF/EstimativaGrid/
   modelosEstimativa: ModeloDeEstimativa[];
   showModelImportDialog: boolean;
   isDirty: boolean;
+  activityTypeLabels: Array<{ label: string; value: number }>;
+  complexityLabels: Array<{ label: string; value: number }>;
+  developmentLabel: string;
+  processLabel: string;
+  supportLabel: string;
 }
 ```
 
@@ -278,6 +298,57 @@ npm run lint
 ```bash
 npm run start:watch
 ```
+
+## Recent Fixes and Improvements
+
+### Option Set Field Stability Fix (December 2024)
+
+**Problem**: 
+1. Option set fields (Activity Type, Complexity) became blank after save operations
+2. UI used hardcoded English labels instead of Dataverse-configured labels (e.g., Portuguese)
+
+**Root Cause**:
+- The UI components used hardcoded English enum values as dropdown keys
+- Dataverse could have different labels configured (localized)
+- After reload, the label strings from Dataverse didn't match the hardcoded dropdown keys
+- This caused dropdowns to show no selection, making rows appear "blank"
+
+**Solution Implemented**:
+
+1. **Dynamic Label Loading**:
+   - Added `getActivityTypeLabels()` and `getComplexityLabels()` to DataverseService
+   - Labels are fetched from Dataverse using `@OData.Community.Display.V1.FormattedValue`
+   - Labels are sorted by integer value for consistent ordering
+   - Added semantic label methods: `getDevelopmentLabel()`, `getProcessLabel()`, `getSupportLabel()`
+
+2. **State Management**:
+   - Extended EstimativaGridComponent state to include dynamic labels
+   - `activityTypeLabels` and `complexityLabels` for dropdown options
+   - `developmentLabel`, `processLabel`, `supportLabel` for business logic
+
+3. **UI Updates**:
+   - EstimationLinesGridComponent now uses dynamic labels from state
+   - Dropdown options use actual Dataverse labels instead of hardcoded text
+   - Business logic (delete restrictions, etc.) uses semantic labels
+
+4. **Calculation Updates**:
+   - All calculation functions accept optional semantic label parameters
+   - Falls back to English enums if labels not provided (backward compatible)
+   - Ensures calculations work correctly with any language configuration
+
+**Result**:
+- ✅ Option set fields remain stable after save/reload operations
+- ✅ UI displays actual Dataverse-configured labels (any language)
+- ✅ Calculations work correctly with localized labels
+- ✅ Backward compatible with existing English configurations
+- ✅ No security vulnerabilities introduced
+- ✅ All builds and lints pass successfully
+
+**Files Changed**:
+- `services/DataverseService.ts`: Added dynamic label methods
+- `ui-controls/EstimativaGridComponent.tsx`: State management for labels
+- `ui-controls/EstimationLinesGridComponent.tsx`: Use dynamic labels in UI
+- `utils/calculations.ts`: Accept label parameters
 
 ## Future Enhancements
 

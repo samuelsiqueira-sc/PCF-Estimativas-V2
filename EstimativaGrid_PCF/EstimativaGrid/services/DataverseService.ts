@@ -148,6 +148,58 @@ export class DataverseService {
         return this.complexityReverseMapping.get(optionSetValue);
     }
 
+    /**
+     * Get all activity type labels from Dataverse
+     * Returns an array of [label, value] pairs sorted by value
+     */
+    public async getActivityTypeLabels(): Promise<Array<{ label: string; value: number }>> {
+        await this.initializeOptionSets();
+        const labels: Array<{ label: string; value: number }> = [];
+        this.activityTypeMapping.forEach((value, label) => {
+            labels.push({ label, value });
+        });
+        // Sort by value for consistent ordering
+        return labels.sort((a, b) => a.value - b.value);
+    }
+
+    /**
+     * Get all complexity labels from Dataverse
+     * Returns an array of [label, value] pairs sorted by value
+     */
+    public async getComplexityLabels(): Promise<Array<{ label: string; value: number }>> {
+        await this.initializeOptionSets();
+        const labels: Array<{ label: string; value: number }> = [];
+        this.complexityMapping.forEach((value, label) => {
+            labels.push({ label, value });
+        });
+        // Sort by value for consistent ordering
+        return labels.sort((a, b) => a.value - b.value);
+    }
+
+    /**
+     * Get the label for Development activity type (value 922340000)
+     */
+    public async getDevelopmentLabel(): Promise<string> {
+        await this.initializeOptionSets();
+        return this.activityTypeReverseMapping.get(922340000) || 'Development';
+    }
+
+    /**
+     * Get the label for Process activity type (value 922340001)
+     */
+    public async getProcessLabel(): Promise<string> {
+        await this.initializeOptionSets();
+        return this.activityTypeReverseMapping.get(922340001) || 'Process';
+    }
+
+    /**
+     * Get the label for Support activity type (value 922340002)
+     */
+    public async getSupportLabel(): Promise<string> {
+        await this.initializeOptionSets();
+        return this.activityTypeReverseMapping.get(922340002) || 'Support';
+    }
+
     // ============= Estimativa (Estimation) Operations =============
 
     /**

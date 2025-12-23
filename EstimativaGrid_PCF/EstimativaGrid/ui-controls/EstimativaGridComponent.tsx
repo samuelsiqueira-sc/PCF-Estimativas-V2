@@ -27,6 +27,11 @@ export interface EstimativaGridComponentState {
     modelosEstimativa: ModeloDeEstimativa[];
     showModelImportDialog: boolean;
     isDirty: boolean;
+    activityTypeLabels: Array<{ label: string; value: number }>;
+    complexityLabels: Array<{ label: string; value: number }>;
+    developmentLabel: string;
+    processLabel: string;
+    supportLabel: string;
 }
 
 export class EstimativaGridComponent extends React.Component<EstimativaGridComponentProps, EstimativaGridComponentState> {
@@ -43,7 +48,12 @@ export class EstimativaGridComponent extends React.Component<EstimativaGridCompo
             tiposDesenvolvimento: [],
             modelosEstimativa: [],
             showModelImportDialog: false,
-            isDirty: false
+            isDirty: false,
+            activityTypeLabels: [],
+            complexityLabels: [],
+            developmentLabel: 'Development',
+            processLabel: 'Process',
+            supportLabel: 'Support'
         };
     }
 
@@ -61,12 +71,17 @@ export class EstimativaGridComponent extends React.Component<EstimativaGridCompo
         try {
             this.setState({ loading: true, error: undefined });
 
-            // Load lookup data
-            const [fases, subfases, tiposDesenvolvimento, modelosEstimativa] = await Promise.all([
+            // Load lookup data and option set labels
+            const [fases, subfases, tiposDesenvolvimento, modelosEstimativa, activityTypeLabels, complexityLabels, developmentLabel, processLabel, supportLabel] = await Promise.all([
                 this.dataverseService.retrieveFases(),
                 this.dataverseService.retrieveSubfases(),
                 this.dataverseService.retrieveTiposDeDesenvolvimento(),
-                this.dataverseService.retrieveModelosDeEstimativa()
+                this.dataverseService.retrieveModelosDeEstimativa(),
+                this.dataverseService.getActivityTypeLabels(),
+                this.dataverseService.getComplexityLabels(),
+                this.dataverseService.getDevelopmentLabel(),
+                this.dataverseService.getProcessLabel(),
+                this.dataverseService.getSupportLabel()
             ]);
 
             if (this.props.estimativaId) {
@@ -83,7 +98,12 @@ export class EstimativaGridComponent extends React.Component<EstimativaGridCompo
                     fases,
                     subfases,
                     tiposDesenvolvimento,
-                    modelosEstimativa
+                    modelosEstimativa,
+                    activityTypeLabels,
+                    complexityLabels,
+                    developmentLabel,
+                    processLabel,
+                    supportLabel
                 });
             } else {
                 // New estimation - no ID yet
@@ -94,7 +114,12 @@ export class EstimativaGridComponent extends React.Component<EstimativaGridCompo
                     fases,
                     subfases,
                     tiposDesenvolvimento,
-                    modelosEstimativa
+                    modelosEstimativa,
+                    activityTypeLabels,
+                    complexityLabels,
+                    developmentLabel,
+                    processLabel,
+                    supportLabel
                 });
             }
         } catch (error) {
@@ -122,12 +147,17 @@ export class EstimativaGridComponent extends React.Component<EstimativaGridCompo
                 line.smt_linhadeestimativaid === lineId ? { ...line, ...changes } : line
             );
 
-            // Recalculate all lines
-            const recalculatedLines = recalculateAllLines(lines);
+            // Recalculate all lines with semantic labels
+            const recalculatedLines = recalculateAllLines(
+                lines, 
+                prevState.developmentLabel, 
+                prevState.processLabel, 
+                prevState.supportLabel
+            );
 
             // Update estimation totals
-            const totalDevelopmentHours = calculateTotalDevelopmentHours(recalculatedLines);
-            const totalSupportHours = calculateTotalSupportHours(recalculatedLines);
+            const totalDevelopmentHours = calculateTotalDevelopmentHours(recalculatedLines, prevState.developmentLabel);
+            const totalSupportHours = calculateTotalSupportHours(recalculatedLines, prevState.supportLabel);
             const totalProjectHours = calculateTotalProjectHours(totalDevelopmentHours, totalSupportHours);
 
             return {
@@ -153,7 +183,7 @@ export class EstimativaGridComponent extends React.Component<EstimativaGridCompo
         const newLine: LinhaDeEstimativa = {
             smt_linhadeestimativaid: uniqueId,
             smt_estimativaid: this.props.estimativaId,
-            smt_tipodeatividade: 'Development',
+            smt_tipodeatividade: this.state.developmentLabel,
             smt_dimensionamento: 0,
             smt_estimativafinal: 0
         };
@@ -169,7 +199,7 @@ export class EstimativaGridComponent extends React.Component<EstimativaGridCompo
         if (!line) return;
 
         // Prevent deletion of Process and Support lines
-        if (line.smt_tipodeatividade === 'Process' || line.smt_tipodeatividade === 'Support') {
+        if (line.smt_tipodeatividade === this.state.processLabel || line.smt_tipodeatividade === this.state.supportLabel) {
             this.setState({ error: 'Process and Support lines cannot be deleted as they are required for estimation calculations.' });
             return;
         }
@@ -182,11 +212,16 @@ export class EstimativaGridComponent extends React.Component<EstimativaGridCompo
 
             this.setState(prevState => {
                 const lines = prevState.lines.filter(l => l.smt_linhadeestimativaid !== lineId);
-                const recalculatedLines = recalculateAllLines(lines);
+                const recalculatedLines = recalculateAllLines(
+                    lines,
+                    prevState.developmentLabel,
+                    prevState.processLabel,
+                    prevState.supportLabel
+                );
 
                 // Update estimation totals
-                const totalDevelopmentHours = calculateTotalDevelopmentHours(recalculatedLines);
-                const totalSupportHours = calculateTotalSupportHours(recalculatedLines);
+                const totalDevelopmentHours = calculateTotalDevelopmentHours(recalculatedLines, prevState.developmentLabel);
+                const totalSupportHours = calculateTotalSupportHours(recalculatedLines, prevState.supportLabel);
                 const totalProjectHours = calculateTotalProjectHours(totalDevelopmentHours, totalSupportHours);
 
                 return {
@@ -240,11 +275,16 @@ export class EstimativaGridComponent extends React.Component<EstimativaGridCompo
 
                 // Reload lines after import
                 const lines = await this.dataverseService.retrieveLinhasDeEstimativa(this.props.estimativaId);
-                const recalculatedLines = recalculateAllLines(lines);
+                const recalculatedLines = recalculateAllLines(
+                    lines,
+                    this.state.developmentLabel,
+                    this.state.processLabel,
+                    this.state.supportLabel
+                );
 
                 // Update estimation totals
-                const totalDevelopmentHours = calculateTotalDevelopmentHours(recalculatedLines);
-                const totalSupportHours = calculateTotalSupportHours(recalculatedLines);
+                const totalDevelopmentHours = calculateTotalDevelopmentHours(recalculatedLines, this.state.developmentLabel);
+                const totalSupportHours = calculateTotalSupportHours(recalculatedLines, this.state.supportLabel);
                 const totalProjectHours = calculateTotalProjectHours(totalDevelopmentHours, totalSupportHours);
 
                 this.setState({
@@ -357,7 +397,7 @@ export class EstimativaGridComponent extends React.Component<EstimativaGridCompo
     };
 
     render(): React.ReactElement {
-        const { loading, error, estimativa, lines, fases, subfases, tiposDesenvolvimento, modelosEstimativa, showModelImportDialog } = this.state;
+        const { loading, error, estimativa, lines, fases, subfases, tiposDesenvolvimento, modelosEstimativa, showModelImportDialog, activityTypeLabels, complexityLabels } = this.state;
 
         if (loading) {
             return (
@@ -405,6 +445,11 @@ export class EstimativaGridComponent extends React.Component<EstimativaGridCompo
                     fases={fases}
                     subfases={subfases}
                     tiposDesenvolvimento={tiposDesenvolvimento}
+                    activityTypeLabels={activityTypeLabels}
+                    complexityLabels={complexityLabels}
+                    developmentLabel={this.state.developmentLabel}
+                    processLabel={this.state.processLabel}
+                    supportLabel={this.state.supportLabel}
                     onChange={this.handleLineChange}
                     onAdd={this.handleAddLine}
                     onDelete={this.handleDeleteLine}

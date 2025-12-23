@@ -24,6 +24,11 @@ export interface EstimationLinesGridComponentProps {
     fases: Fase[];
     subfases: Subfase[];
     tiposDesenvolvimento: TipoDeDesenvolvimento[];
+    activityTypeLabels: Array<{ label: string; value: number }>;
+    complexityLabels: Array<{ label: string; value: number }>;
+    developmentLabel: string;
+    processLabel: string;
+    supportLabel: string;
     onChange: (lineId: string, changes: Partial<LinhaDeEstimativa>) => void;
     onAdd: () => void;
     onDelete: (lineId: string) => void;
@@ -35,24 +40,34 @@ export const EstimationLinesGridComponent: React.FC<EstimationLinesGridComponent
     fases,
     subfases,
     tiposDesenvolvimento,
+    activityTypeLabels,
+    complexityLabels,
+    developmentLabel,
+    processLabel,
+    supportLabel,
     onChange,
     onAdd,
     onDelete,
     onDevelopmentTypeChange
 }) => {
-    const activityTypeOptions: IDropdownOption[] = [
-        { key: ActivityType.Development, text: 'Development' },
-        { key: ActivityType.Process, text: 'Process' },
-        { key: ActivityType.Support, text: 'Support' }
-    ];
+    // Use dynamic labels from Dataverse if available, otherwise use defaults
+    const activityTypeOptions: IDropdownOption[] = activityTypeLabels.length > 0
+        ? activityTypeLabels.map(({ label }) => ({ key: label, text: label }))
+        : [
+            { key: ActivityType.Development, text: 'Development' },
+            { key: ActivityType.Process, text: 'Process' },
+            { key: ActivityType.Support, text: 'Support' }
+        ];
 
-    const complexityOptions: IDropdownOption[] = [
-        { key: Complexity.VeryLow, text: 'Very Low' },
-        { key: Complexity.Low, text: 'Low' },
-        { key: Complexity.Medium, text: 'Medium' },
-        { key: Complexity.High, text: 'High' },
-        { key: Complexity.VeryHigh, text: 'Very High' }
-    ];
+    const complexityOptions: IDropdownOption[] = complexityLabels.length > 0
+        ? complexityLabels.map(({ label }) => ({ key: label, text: label }))
+        : [
+            { key: Complexity.VeryLow, text: 'Very Low' },
+            { key: Complexity.Low, text: 'Low' },
+            { key: Complexity.Medium, text: 'Medium' },
+            { key: Complexity.High, text: 'High' },
+            { key: Complexity.VeryHigh, text: 'Very High' }
+        ];
 
     const faseOptions: IDropdownOption[] = fases.map(fase => ({
         key: fase.smt_faseid || '',
@@ -132,7 +147,7 @@ export const EstimationLinesGridComponent: React.FC<EstimationLinesGridComponent
             minWidth: 40,
             maxWidth: 40,
             onRender: (item: LinhaDeEstimativa) => {
-                const canDelete = item.smt_tipodeatividade === ActivityType.Development;
+                const canDelete = item.smt_tipodeatividade === developmentLabel;
                 return (
                     <TooltipHost content={canDelete ? 'Delete' : 'Cannot delete Process/Support lines'}>
                         <IconButton
@@ -248,7 +263,7 @@ export const EstimationLinesGridComponent: React.FC<EstimationLinesGridComponent
             maxWidth: 100,
             onRender: (item: LinhaDeEstimativa) => {
                 // For Support activities, dimensioning is calculated
-                if (item.smt_tipodeatividade === ActivityType.Support) {
+                if (item.smt_tipodeatividade === supportLabel) {
                     return (
                         <Text styles={{ root: { fontSize: 12, padding: 8 } }}>
                             {item.smt_dimensionamento?.toFixed(2) || '0.00'}
@@ -266,7 +281,7 @@ export const EstimationLinesGridComponent: React.FC<EstimationLinesGridComponent
             maxWidth: 80,
             onRender: (item: LinhaDeEstimativa) => {
                 // Only show for Support activities
-                if (item.smt_tipodeatividade === ActivityType.Support) {
+                if (item.smt_tipodeatividade === supportLabel) {
                     return renderEditableNumberField(item, 'smt_dedesenvolvimento', 2);
                 }
                 return <div />;
