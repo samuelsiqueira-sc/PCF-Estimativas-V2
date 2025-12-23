@@ -289,7 +289,7 @@ export class DataverseService {
         if (linha.smt_faseid) 
             record['smt_Fase@odata.bind'] = `/smt_fases(${linha.smt_faseid})`;
         if (linha.smt_subfaseid) 
-            record['smt_Subfase@odata.bind'] = `/smt_subfases(${linha.smt_subfaseid})`;
+            record['smt_Subfase@odata.bind@odata.bind'] = `/smt_subfases(${linha.smt_subfaseid})`;
         if (linha.smt_tipodedesenvolvimentoid) 
             record['smt_TipodeDesenvolvimento@odata.bind'] = `/smt_tipodedesenvolvimentos(${linha.smt_tipodedesenvolvimentoid})`;
         

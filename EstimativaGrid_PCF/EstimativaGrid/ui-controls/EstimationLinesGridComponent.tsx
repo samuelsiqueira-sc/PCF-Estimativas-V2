@@ -70,17 +70,17 @@ export const EstimationLinesGridComponent: React.FC<EstimationLinesGridComponent
         ];
 
     const faseOptions: IDropdownOption[] = fases.map(fase => ({
-        key: (fase.smt_faseid || '').toLowerCase(),
+        key: fase.smt_faseid || '',
         text: fase.smt_nomefase || ''
     }));
 
     const subfaseOptions: IDropdownOption[] = subfases.map(subfase => ({
-        key: (subfase.smt_subfaseid || '').toLowerCase(),
+        key: subfase.smt_subfaseid || '',
         text: subfase.smt_nomesubfase || ''
     }));
 
     const tipoDesenvolvimentoOptions: IDropdownOption[] = tiposDesenvolvimento.map(tipo => ({
-        key: (tipo.smt_tipodedesenvolvimentoid || '').toLowerCase(),
+        key: tipo.smt_tipodedesenvolvimentoid || '',
         text: tipo.smt_nometipo || ''
     }));
 
@@ -129,14 +129,10 @@ export const EstimationLinesGridComponent: React.FC<EstimationLinesGridComponent
         options: IDropdownOption[],
         onChange: (lineId: string, value: string) => void
     ): JSX.Element => {
-        const selectedKey = item[fieldName] as string;
-        // Normalize GUID to lowercase for consistent matching
-        const normalizedKey = selectedKey?.toLowerCase();
-        
         return (
             <Dropdown
                 options={options}
-                selectedKey={normalizedKey}
+                selectedKey={item[fieldName] as string}
                 onChange={(_, option) => onChange(item.smt_linhadeestimativaid || '', option?.key as string)}
                 styles={{ root: { width: '100%' }, dropdown: { fontSize: 12 } }}
             />
@@ -182,16 +178,9 @@ export const EstimationLinesGridComponent: React.FC<EstimationLinesGridComponent
             minWidth: 120,
             maxWidth: 120,
             onRender: (item: LinhaDeEstimativa) => 
-                renderDropdown(item, 'smt_faseid', faseOptions, (lineId, value) => {
-                    // Find the fase by lowercase comparison
-                    const selectedFase = fases.find(f => (f.smt_faseid || '').toLowerCase() === value.toLowerCase());
-                    if (selectedFase) {
-                        onChange(lineId, { 
-                            smt_faseid: selectedFase.smt_faseid,
-                            smt_fase: selectedFase.smt_nomefase 
-                        });
-                    }
-                })
+                renderDropdown(item, 'smt_faseid', faseOptions, (lineId, value) => 
+                    onChange(lineId, { smt_faseid: value })
+                )
         },
         {
             key: 'subphase',
@@ -200,16 +189,9 @@ export const EstimationLinesGridComponent: React.FC<EstimationLinesGridComponent
             minWidth: 120,
             maxWidth: 120,
             onRender: (item: LinhaDeEstimativa) => 
-                renderDropdown(item, 'smt_subfaseid', subfaseOptions, (lineId, value) => {
-                    // Find the subfase by lowercase comparison
-                    const selectedSubfase = subfases.find(s => (s.smt_subfaseid || '').toLowerCase() === value.toLowerCase());
-                    if (selectedSubfase) {
-                        onChange(lineId, { 
-                            smt_subfaseid: selectedSubfase.smt_subfaseid,
-                            smt_subfase: selectedSubfase.smt_nomesubfase 
-                        });
-                    }
-                })
+                renderDropdown(item, 'smt_subfaseid', subfaseOptions, (lineId, value) => 
+                    onChange(lineId, { smt_subfaseid: value })
+                )
         },
         {
             key: 'module',
@@ -242,13 +224,7 @@ export const EstimationLinesGridComponent: React.FC<EstimationLinesGridComponent
             minWidth: 120,
             maxWidth: 150,
             onRender: (item: LinhaDeEstimativa) => 
-                renderDropdown(item, 'smt_tipodedesenvolvimentoid', tipoDesenvolvimentoOptions, (lineId, value) => {
-                    // Find the tipo by lowercase comparison to get the original GUID
-                    const selectedTipo = tiposDesenvolvimento.find(t => (t.smt_tipodedesenvolvimentoid || '').toLowerCase() === value.toLowerCase());
-                    if (selectedTipo?.smt_tipodedesenvolvimentoid) {
-                        onDevelopmentTypeChange(lineId, selectedTipo.smt_tipodedesenvolvimentoid);
-                    }
-                })
+                renderDropdown(item, 'smt_tipodedesenvolvimentoid', tipoDesenvolvimentoOptions, onDevelopmentTypeChange)
         },
         {
             key: 'complexity',
