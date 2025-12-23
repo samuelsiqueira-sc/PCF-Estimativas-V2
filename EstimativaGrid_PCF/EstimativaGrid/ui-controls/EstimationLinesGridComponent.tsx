@@ -185,10 +185,12 @@ export const EstimationLinesGridComponent: React.FC<EstimationLinesGridComponent
                 renderDropdown(item, 'smt_faseid', faseOptions, (lineId, value) => {
                     // Find the fase by lowercase comparison
                     const selectedFase = fases.find(f => (f.smt_faseid || '').toLowerCase() === value.toLowerCase());
-                    onChange(lineId, { 
-                        smt_faseid: selectedFase?.smt_faseid,
-                        smt_fase: selectedFase?.smt_nomefase 
-                    });
+                    if (selectedFase) {
+                        onChange(lineId, { 
+                            smt_faseid: selectedFase.smt_faseid,
+                            smt_fase: selectedFase.smt_nomefase 
+                        });
+                    }
                 })
         },
         {
@@ -201,10 +203,12 @@ export const EstimationLinesGridComponent: React.FC<EstimationLinesGridComponent
                 renderDropdown(item, 'smt_subfaseid', subfaseOptions, (lineId, value) => {
                     // Find the subfase by lowercase comparison
                     const selectedSubfase = subfases.find(s => (s.smt_subfaseid || '').toLowerCase() === value.toLowerCase());
-                    onChange(lineId, { 
-                        smt_subfaseid: selectedSubfase?.smt_subfaseid,
-                        smt_subfase: selectedSubfase?.smt_nomesubfase 
-                    });
+                    if (selectedSubfase) {
+                        onChange(lineId, { 
+                            smt_subfaseid: selectedSubfase.smt_subfaseid,
+                            smt_subfase: selectedSubfase.smt_nomesubfase 
+                        });
+                    }
                 })
         },
         {
