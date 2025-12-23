@@ -38,10 +38,33 @@ export class EstimativaGrid implements ComponentFramework.ReactControl<IInputs, 
     public updateView(context: ComponentFramework.Context<IInputs>): React.ReactElement {
         this.context = context;
         
-        // Get the estimation ID from the dataset if available
-        const dataset = context.parameters.sampleDataSet;
-        if (dataset && dataset.getSelectedRecordIds && dataset.getSelectedRecordIds().length > 0) {
-            this.estimativaId = dataset.getSelectedRecordIds()[0];
+        // Try to get estimativa ID from URL parameters (works on form load)
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const idFromUrl = urlParams.get('id');
+            if (idFromUrl) {
+                this.estimativaId = idFromUrl;
+            }
+        } catch (error) {
+            console.warn('Could not get ID from URL:', error);
+        }
+
+        // Fallback: Get from dataset lookup if URL method didn't work
+        if (!this.estimativaId) {
+            const dataset = context.parameters.sampleDataSet;
+            if (dataset && dataset.sortedRecordIds && dataset.sortedRecordIds.length > 0) {
+                const firstRecordId = dataset.sortedRecordIds[0];
+                const record = dataset.records[firstRecordId];
+                
+                if (record && record.getValue('smt_estimativa')) {
+                    const lookupValue = record.getValue('smt_estimativa') as ComponentFramework.EntityReference;
+                    if (lookupValue?.id) {
+                        this.estimativaId = typeof lookupValue.id === 'string' 
+                            ? lookupValue.id 
+                            : (lookupValue.id as any).guid;
+                    }
+                }
+            }
         }
 
         return React.createElement(EstimativaGridComponent, {

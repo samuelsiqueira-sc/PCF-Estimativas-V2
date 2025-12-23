@@ -86,7 +86,7 @@ export class EstimativaGridComponent extends React.Component<EstimativaGridCompo
                     modelosEstimativa
                 });
             } else {
-                // New estimation
+                // New estimation - no ID yet
                 this.setState({
                     loading: false,
                     estimativa: {},
@@ -98,6 +98,7 @@ export class EstimativaGridComponent extends React.Component<EstimativaGridCompo
                 });
             }
         } catch (error) {
+            console.error('Error loading data:', error);
             const errorMessage = error instanceof Error 
                 ? `Failed to load data: ${error.message}` 
                 : 'Failed to load data. Please check your connection and try again.';
@@ -144,8 +145,9 @@ export class EstimativaGridComponent extends React.Component<EstimativaGridCompo
 
     private handleAddLine = (): void => {
         // Use crypto.randomUUID if available, fallback to timestamp-based ID
+        // Always prefix with 'new-' to distinguish unsaved lines
         const uniqueId = typeof crypto !== 'undefined' && crypto.randomUUID 
-            ? crypto.randomUUID() 
+            ? `new-${crypto.randomUUID()}` 
             : `new-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
             
         const newLine: LinhaDeEstimativa = {
@@ -272,30 +274,47 @@ export class EstimativaGridComponent extends React.Component<EstimativaGridCompo
         try {
             this.setState({ loading: true, error: undefined });
 
-            let estimativaId = this.props.estimativaId;
+            const estimativaId = this.props.estimativaId;
 
-            // Save or update estimation
-            if (!estimativaId && this.state.estimativa) {
-                const result = await this.dataverseService.createEstimativa(this.state.estimativa);
-                estimativaId = result.id;
-            } else if (estimativaId && this.state.estimativa) {
-                await this.dataverseService.updateEstimativa(estimativaId, this.state.estimativa);
+            // Validate that we have an estimation ID
+            if (!estimativaId) {
+                throw new Error('Cannot save lines without a valid estimation ID. Please ensure the estimation record exists.');
             }
 
-            // Save or update lines
+            // Save or update lines only
             if (estimativaId) {
                 for (const line of this.state.lines) {
+                    // Build a clean line object with only the properties we want to save
+                    // Explicitly exclude navigation property display names
+                    const cleanLine: Partial<LinhaDeEstimativa> = {
+                        smt_linhadeestimativaid: line.smt_linhadeestimativaid,
+                        smt_estimativaid: line.smt_estimativaid,
+                        smt_faseid: line.smt_faseid,
+                        smt_subfaseid: line.smt_subfaseid,
+                        smt_tipodedesenvolvimentoid: line.smt_tipodedesenvolvimentoid,
+                        smt_modulo: line.smt_modulo,
+                        smt_requisitocliente: line.smt_requisitocliente,
+                        smt_funcionalidade: line.smt_funcionalidade,
+                        smt_descricao: line.smt_descricao,
+                        smt_observacoestecnicas: line.smt_observacoestecnicas,
+                        smt_dimensionamento: line.smt_dimensionamento,
+                        smt_estimativafinal: line.smt_estimativafinal,
+                        smt_tipodeatividade: line.smt_tipodeatividade,
+                        smt_complexidade: line.smt_complexidade,
+                        smt_dedesenvolvimento: line.smt_dedesenvolvimento
+                    };
+                    
                     if (line.smt_linhadeestimativaid?.startsWith('new-')) {
                         // Create new line
                         await this.dataverseService.createLinhaDeEstimativa({
-                            ...line,
+                            ...cleanLine,
                             smt_estimativaid: estimativaId
                         });
                     } else if (line.smt_linhadeestimativaid) {
                         // Update existing line
                         await this.dataverseService.updateLinhaDeEstimativa(
                             line.smt_linhadeestimativaid,
-                            line
+                            cleanLine
                         );
                     }
                 }

@@ -14,9 +14,138 @@ import {
 
 export class DataverseService {
     private webAPI: ComponentFramework.WebApi;
+    private activityTypeMapping: Map<string, number> = new Map();
+    private activityTypeReverseMapping: Map<number, string> = new Map();
+    private complexityMapping: Map<string, number> = new Map();
+    private complexityReverseMapping: Map<number, string> = new Map();
+    private optionSetsInitialized: boolean = false;
 
     constructor(webAPI: ComponentFramework.WebApi) {
         this.webAPI = webAPI;
+    }
+
+    /**
+     * Initialize option set mappings by querying a sample record from Dataverse
+     * This retrieves the actual option set values and labels dynamically
+     */
+    private async initializeOptionSets(): Promise<void> {
+        if (this.optionSetsInitialized) return;
+
+        try {
+            // Query existing records to get option set formatted values
+            const result = await this.webAPI.retrieveMultipleRecords(
+                'smt_linhadeestimativa',
+                '?$select=smt_tipodeatividade,smt_complexidade&$top=100'
+            );
+
+            // Build mappings from the retrieved data
+            for (const entity of result.entities) {
+                // Activity Type mappings
+                if (entity.smt_tipodeatividade !== undefined && entity.smt_tipodeatividade !== null) {
+                    const value = entity.smt_tipodeatividade;
+                    const formattedValue = entity['smt_tipodeatividade@OData.Community.Display.V1.FormattedValue'];
+                    if (formattedValue && !this.activityTypeMapping.has(formattedValue)) {
+                        this.activityTypeMapping.set(formattedValue, value);
+                        this.activityTypeReverseMapping.set(value, formattedValue);
+                    }
+                }
+
+                // Complexity mappings
+                if (entity.smt_complexidade !== undefined && entity.smt_complexidade !== null) {
+                    const value = entity.smt_complexidade;
+                    const formattedValue = entity['smt_complexidade@OData.Community.Display.V1.FormattedValue'];
+                    if (formattedValue && !this.complexityMapping.has(formattedValue)) {
+                        this.complexityMapping.set(formattedValue, value);
+                        this.complexityReverseMapping.set(value, formattedValue);
+                    }
+                }
+            }
+
+            // If no records exist, set default mappings based on the error message values
+            // These are fallback values that should work with the standard Dataverse schema
+            if (this.activityTypeMapping.size === 0) {
+                this.activityTypeMapping.set('Development', 922340000);
+                this.activityTypeMapping.set('Process', 922340001);
+                this.activityTypeMapping.set('Support', 922340002);
+                this.activityTypeReverseMapping.set(922340000, 'Development');
+                this.activityTypeReverseMapping.set(922340001, 'Process');
+                this.activityTypeReverseMapping.set(922340002, 'Support');
+            }
+
+            if (this.complexityMapping.size === 0) {
+                // Set default complexity values - these may need adjustment
+                this.complexityMapping.set('Very Low', 922340000);
+                this.complexityMapping.set('Low', 922340001);
+                this.complexityMapping.set('Medium', 922340002);
+                this.complexityMapping.set('High', 922340003);
+                this.complexityMapping.set('Very High', 922340004);
+                this.complexityReverseMapping.set(922340000, 'Very Low');
+                this.complexityReverseMapping.set(922340001, 'Low');
+                this.complexityReverseMapping.set(922340002, 'Medium');
+                this.complexityReverseMapping.set(922340003, 'High');
+                this.complexityReverseMapping.set(922340004, 'Very High');
+            }
+
+            this.optionSetsInitialized = true;
+        } catch (error) {
+            console.error('Error initializing option sets:', error);
+            // Set fallback values if query fails
+            this.activityTypeMapping.set('Development', 922340000);
+            this.activityTypeMapping.set('Process', 922340001);
+            this.activityTypeMapping.set('Support', 922340002);
+            this.activityTypeReverseMapping.set(922340000, 'Development');
+            this.activityTypeReverseMapping.set(922340001, 'Process');
+            this.activityTypeReverseMapping.set(922340002, 'Support');
+            
+            this.complexityMapping.set('Very Low', 922340000);
+            this.complexityMapping.set('Low', 922340001);
+            this.complexityMapping.set('Medium', 922340002);
+            this.complexityMapping.set('High', 922340003);
+            this.complexityMapping.set('Very High', 922340004);
+            this.complexityReverseMapping.set(922340000, 'Very Low');
+            this.complexityReverseMapping.set(922340001, 'Low');
+            this.complexityReverseMapping.set(922340002, 'Medium');
+            this.complexityReverseMapping.set(922340003, 'High');
+            this.complexityReverseMapping.set(922340004, 'Very High');
+            
+            this.optionSetsInitialized = true;
+        }
+    }
+
+    /**
+     * Convert ActivityType string to Dataverse option set value
+     */
+    private async activityTypeToOptionSet(activityType: string | undefined): Promise<number | undefined> {
+        if (!activityType) return undefined;
+        await this.initializeOptionSets();
+        return this.activityTypeMapping.get(activityType);
+    }
+
+    /**
+     * Convert Dataverse option set value to ActivityType string
+     */
+    private async activityTypeFromOptionSet(optionSetValue: number | undefined): Promise<string | undefined> {
+        if (optionSetValue === undefined) return undefined;
+        await this.initializeOptionSets();
+        return this.activityTypeReverseMapping.get(optionSetValue);
+    }
+
+    /**
+     * Convert Complexity string to Dataverse option set value
+     */
+    private async complexityToOptionSet(complexity: string | undefined): Promise<number | undefined> {
+        if (!complexity) return undefined;
+        await this.initializeOptionSets();
+        return this.complexityMapping.get(complexity);
+    }
+
+    /**
+     * Convert Dataverse option set value to Complexity string
+     */
+    private async complexityFromOptionSet(optionSetValue: number | undefined): Promise<string | undefined> {
+        if (optionSetValue === undefined) return undefined;
+        await this.initializeOptionSets();
+        return this.complexityReverseMapping.get(optionSetValue);
     }
 
     // ============= Estimativa (Estimation) Operations =============
@@ -79,7 +208,7 @@ export class DataverseService {
         const result = await this.webAPI.retrieveRecord(
             'smt_estimativa',
             estimativaId,
-            '?$select=smt_estimativaid,smt_nome,smt_oportunidade,smt_totaldesenvolvimento,smt_totalhorasapoio,smt_totalhorasprojeto,smt_datadeinicios,smt_numeroid&$expand=smt_modelodeestimativa($select=smt_modelodeestimativaid,smt_nomemodelo)'
+            '?$select=smt_estimativaid,smt_nome,smt_oportunidade,smt_totaldesenvolvimento,smt_totalhorasapoio,smt_totalhorasprojeto,smt_datainicioestimada,versionnumber'
         );
 
         return {
@@ -89,10 +218,8 @@ export class DataverseService {
             smt_totaldesenvolvimento: result.smt_totaldesenvolvimento,
             smt_totalhorasapoio: result.smt_totalhorasapoio,
             smt_totalhorasprojeto: result.smt_totalhorasprojeto,
-            smt_modelodeestimativaid: result._smt_modelodeestimativa_value,
-            smt_modelodeestimativa: result.smt_modelodeestimativa?.smt_nomemodelo,
             smt_datainicioestimada: result.smt_datainicioestimada,
-            versionnumber: result.smt_numeroid
+            versionnumber: result.versionnumber
         };
     }
 
@@ -104,15 +231,17 @@ export class DataverseService {
     async createLinhaDeEstimativa(linha: LinhaDeEstimativa): Promise<ComponentFramework.LookupValue> {
         const record: ComponentFramework.WebApi.Entity = {};
         
+        // Only include lookup IDs, not navigation property names
         if (linha.smt_estimativaid) 
-            record['smt_estimativa@odata.bind'] = `/smt_estimativas(${linha.smt_estimativaid})`;
+            record['smt_Estimativa@odata.bind'] = `/smt_estimativas(${linha.smt_estimativaid})`;
         if (linha.smt_faseid) 
-            record['smt_fase@odata.bind'] = `/smt_fases(${linha.smt_faseid})`;
+            record['smt_Fase@odata.bind'] = `/smt_fases(${linha.smt_faseid})`;
         if (linha.smt_subfaseid) 
-            record['smt_subfase@odata.bind'] = `/smt_subfases(${linha.smt_subfaseid})`;
+            record['smt_Subfase@odata.bind@odata.bind'] = `/smt_subfases(${linha.smt_subfaseid})`;
         if (linha.smt_tipodedesenvolvimentoid) 
-            record['smt_tipodedesenvolvimento@odata.bind'] = `/smt_tipodedesenvolvimentos(${linha.smt_tipodedesenvolvimentoid})`;
+            record['smt_TipodeDesenvolvimento@odata.bind'] = `/smt_tipodedesenvolvimentos(${linha.smt_tipodedesenvolvimentoid})`;
         
+        // Add regular properties (never add smt_fase, smt_subfase, smt_tipodedesenvolvimento, smt_estimativa)
         if (linha.smt_modulo) record['smt_modulo'] = linha.smt_modulo;
         if (linha.smt_requisitocliente) record['smt_requisitocliente'] = linha.smt_requisitocliente;
         if (linha.smt_funcionalidade) record['smt_funcionalidade'] = linha.smt_funcionalidade;
@@ -120,8 +249,15 @@ export class DataverseService {
         if (linha.smt_observacoestecnicas) record['smt_observacoestecnicas'] = linha.smt_observacoestecnicas;
         if (linha.smt_dimensionamento !== undefined) record['smt_dimensionamento'] = linha.smt_dimensionamento;
         if (linha.smt_estimativafinal !== undefined) record['smt_estimativafinal'] = linha.smt_estimativafinal;
-        if (linha.smt_tipodeatividade) record['smt_tipodeatividade'] = linha.smt_tipodeatividade;
-        if (linha.smt_complexidade) record['smt_complexidade'] = linha.smt_complexidade;
+        
+        // Convert ActivityType string to option set integer
+        const activityTypeValue = await this.activityTypeToOptionSet(linha.smt_tipodeatividade as string);
+        if (activityTypeValue !== undefined) record['smt_tipodeatividade'] = activityTypeValue;
+        
+        // Convert Complexity string to option set integer
+        const complexityValue = await this.complexityToOptionSet(linha.smt_complexidade as string);
+        if (complexityValue !== undefined) record['smt_complexidade'] = complexityValue;
+        
         if (linha.smt_dedesenvolvimento !== undefined) 
             record['smt_dedesenvolvimento'] = linha.smt_dedesenvolvimento;
         //if (linha.smt_ordem !== undefined) record['smt_ordem'] = linha.smt_ordem;
@@ -140,28 +276,18 @@ export class DataverseService {
     async updateLinhaDeEstimativa(linhaId: string, linha: Partial<LinhaDeEstimativa>): Promise<void> {
         const record: ComponentFramework.WebApi.Entity = {};
         
-        if (linha.smt_faseid !== undefined) {
-            if (linha.smt_faseid) {
-                record['smt_fase@odata.bind'] = `/smt_fases(${linha.smt_faseid})`;
-            } else {
-                record['smt_fase@odata.bind'] = null;
-            }
+        // Handle lookup fields - only add if they have valid values
+        if (linha.smt_faseid !== undefined && linha.smt_faseid) {
+            record['smt_fase@odata.bind'] = `/smt_fases(${linha.smt_faseid})`;
         }
-        if (linha.smt_subfaseid !== undefined) {
-            if (linha.smt_subfaseid) {
-                record['smt_subfase@odata.bind'] = `/smt_subfases(${linha.smt_subfaseid})`;
-            } else {
-                record['smt_subfase@odata.bind'] = null;
-            }
+        if (linha.smt_subfaseid !== undefined && linha.smt_subfaseid) {
+            record['smt_subfase@odata.bind'] = `/smt_subfases(${linha.smt_subfaseid})`;
         }
-        if (linha.smt_tipodedesenvolvimentoid !== undefined) {
-            if (linha.smt_tipodedesenvolvimentoid) {
-                record['smt_tipodedesenvolvimento@odata.bind'] = `/smt_tipodedesenvolvimentos(${linha.smt_tipodedesenvolvimentoid})`;
-            } else {
-                record['smt_tipodedesenvolvimento@odata.bind'] = null;
-            }
+        if (linha.smt_tipodedesenvolvimentoid !== undefined && linha.smt_tipodedesenvolvimentoid) {
+            record['smt_tipodedesenvolvimento@odata.bind'] = `/smt_tipodedesenvolvimentos(${linha.smt_tipodedesenvolvimentoid})`;
         }
         
+        // Handle regular properties
         if (linha.smt_modulo !== undefined) record['smt_modulo'] = linha.smt_modulo;
         if (linha.smt_requisitocliente !== undefined) record['smt_requisitocliente'] = linha.smt_requisitocliente;
         if (linha.smt_funcionalidade !== undefined) record['smt_funcionalidade'] = linha.smt_funcionalidade;
@@ -169,8 +295,19 @@ export class DataverseService {
         if (linha.smt_observacoestecnicas !== undefined) record['smt_observacoestecnicas'] = linha.smt_observacoestecnicas;
         if (linha.smt_dimensionamento !== undefined) record['smt_dimensionamento'] = linha.smt_dimensionamento;
         if (linha.smt_estimativafinal !== undefined) record['smt_estimativafinal'] = linha.smt_estimativafinal;
-        if (linha.smt_tipodeatividade !== undefined) record['smt_tipodeatividade'] = linha.smt_tipodeatividade;
-        if (linha.smt_complexidade !== undefined) record['smt_complexidade'] = linha.smt_complexidade;
+        
+        // Convert ActivityType string to option set integer
+        if (linha.smt_tipodeatividade !== undefined) {
+            const activityTypeValue = await this.activityTypeToOptionSet(linha.smt_tipodeatividade as string);
+            if (activityTypeValue !== undefined) record['smt_tipodeatividade'] = activityTypeValue;
+        }
+        
+        // Convert Complexity string to option set integer
+        if (linha.smt_complexidade !== undefined) {
+            const complexityValue = await this.complexityToOptionSet(linha.smt_complexidade as string);
+            if (complexityValue !== undefined) record['smt_complexidade'] = complexityValue;
+        }
+        
         if (linha.smt_dedesenvolvimento !== undefined) 
             record['smt_dedesenvolvimento'] = linha.smt_dedesenvolvimento;
         //if (linha.smt_ordem !== undefined) record['smt_ordem'] = linha.smt_ordem;
@@ -202,7 +339,7 @@ export class DataverseService {
                 <entity name="smt_linhadeestimativa">
                     <attribute name="smt_linhadeestimativaid" />
                     <attribute name="smt_modulo" />
-                    <attribute name="smt_requisitodocliente" />
+                    <attribute name="smt_requisitocliente" />
                     <attribute name="smt_funcionalidade" />
                     <attribute name="smt_descricao" />
                     <attribute name="smt_observacoestecnicas" />
@@ -210,13 +347,11 @@ export class DataverseService {
                     <attribute name="smt_estimativafinal" />
                     <attribute name="smt_tipodeatividade" />
                     <attribute name="smt_complexidade" />
-                    <attribute name="smt_percentualdedesenvolvimento" />
-                    <attribute name="smt_ordem" />
-                    <attribute name="smt_numeroid" />
+                    <attribute name="smt_dedesenvolvimento" />
+                    <attribute name="versionnumber" />
                     <filter>
                         <condition attribute="smt_estimativa" operator="eq" value="${estimativaId}" />
                     </filter>
-                    <order attribute="smt_ordem" descending="false" />
                     <link-entity name="smt_fase" from="smt_faseid" to="smt_fase" alias="fase" link-type="outer">
                         <attribute name="smt_faseid" />
                         <attribute name="smt_nomefase" />
@@ -235,28 +370,33 @@ export class DataverseService {
 
         const result = await this.webAPI.retrieveMultipleRecords('smt_linhadeestimativa', `?fetchXml=${encodeURIComponent(fetchXml)}`);
         
-        return result.entities.map(entity => ({
-            smt_linhadeestimativaid: entity.smt_linhadeestimativaid,
-            smt_estimativaid: estimativaId,
-            smt_faseid: entity['_smt_fase_value'],
-            smt_fase: entity['fase.smt_nomefase'],
-            smt_subfaseid: entity['_smt_subfase_value'],
-            smt_subfase: entity['subfase.smt_nomesubfase'],
-            smt_tipodedesenvolvimentoid: entity['_smt_tipodedesenvolvimento_value'],
-            smt_tipodedesenvolvimento: entity['tipo.smt_nometipo'],
-            smt_modulo: entity.smt_modulo,
-            smt_requisitodocliente: entity.smt_requisitodocliente,
-            smt_funcionalidade: entity.smt_funcionalidade,
-            smt_descricao: entity.smt_descricao,
-            smt_observacoestecnicas: entity.smt_observacoestecnicas,
-            smt_dimensionamento: entity.smt_dimensionamento,
-            smt_estimativafinal: entity.smt_estimativafinal,
-            smt_tipodeatividade: entity.smt_tipodeatividade,
-            smt_complexidade: entity.smt_complexidade,
-            smt_percentualdedesenvolvimento: entity.smt_percentualdedesenvolvimento,
-            smt_ordem: entity.smt_ordem,
-            smt_numeroid: entity.smt_numeroid
-        }));
+        const lines = [];
+        for (const entity of result.entities) {
+            lines.push({
+                smt_linhadeestimativaid: entity.smt_linhadeestimativaid,
+                smt_estimativaid: estimativaId,
+                smt_faseid: entity['_smt_fase_value'],
+                smt_fase: entity['fase.smt_nomefase'],
+                smt_subfaseid: entity['_smt_subfase_value'],
+                smt_subfase: entity['subfase.smt_nomesubfase'],
+                smt_tipodedesenvolvimentoid: entity['_smt_tipodedesenvolvimento_value'],
+                smt_tipodedesenvolvimento: entity['tipo.smt_nometipo'],
+                smt_modulo: entity.smt_modulo,
+                smt_requisitocliente: entity.smt_requisitocliente,
+                smt_funcionalidade: entity.smt_funcionalidade,
+                smt_descricao: entity.smt_descricao,
+                smt_observacoestecnicas: entity.smt_observacoestecnicas,
+                smt_dimensionamento: entity.smt_dimensionamento,
+                smt_estimativafinal: entity.smt_estimativafinal,
+                // Convert option set integer values back to string enums
+                smt_tipodeatividade: await this.activityTypeFromOptionSet(entity.smt_tipodeatividade),
+                smt_complexidade: await this.complexityFromOptionSet(entity.smt_complexidade),
+                smt_dedesenvolvimento: entity.smt_dedesenvolvimento,
+                versionnumber: entity.versionnumber
+            });
+        }
+        
+        return lines;
     }
 
     // ============= Lookup Tables Operations =============
@@ -267,14 +407,13 @@ export class DataverseService {
     async retrieveFases(): Promise<Fase[]> {
         const result = await this.webAPI.retrieveMultipleRecords(
             'smt_fase',
-            '?$select=smt_faseid,smt_nomefase,smt_exibirnocronograma,smt_ordem,smt_cor&$orderby=smt_ordem asc'
+            '?$select=smt_faseid,smt_nomefase,smt_exibirnocronograma,smt_cor&$orderby=smt_ordem asc'
         );
         
         return result.entities.map(entity => ({
             smt_faseid: entity.smt_faseid,
             smt_nomefase: entity.smt_nomefase,
             smt_exibirnocronograma: entity.smt_exibirnocronograma,
-            smt_ordem: entity.smt_ordem,
             smt_cor: entity.smt_cor
         }));
     }
@@ -365,7 +504,7 @@ export class DataverseService {
                     <attribute name="smt_dimensionamento" />
                     <attribute name="smt_tipodeatividade" />
                     <attribute name="smt_complexidade" />
-                    <attribute name="smt_percentualdedesenvolvimento" />
+                    <attribute name="smt_dedesenvolvimento" />
                     <attribute name="smt_ordem" />
                     <filter>
                         <condition attribute="smt_modelodeestimativa" operator="eq" value="${modeloId}" />
@@ -389,23 +528,29 @@ export class DataverseService {
             `?fetchXml=${encodeURIComponent(fetchXml)}`
         );
         
-        return result.entities.map(entity => ({
-            smt_linhademodelodeestimativaid: entity.smt_linhademodelodeestimativaid,
-            smt_modelodeestimativaid: modeloId,
-            smt_faseid: entity['_smt_fase_value'] || entity['fase.smt_faseid'],
-            smt_subfaseid: entity['_smt_subfase_value'] || entity['subfase.smt_subfaseid'],
-            smt_tipodedesenvolvimentoid: entity['_smt_tipodedesenvolvimento_value'] || entity['tipo.smt_tipodedesenvolvimentoid'],
-            smt_modulo: entity.smt_modulo,
-            smt_requisitodocliente: entity.smt_requisitodocliente,
-            smt_funcionalidade: entity.smt_funcionalidade,
-            smt_descricao: entity.smt_descricao,
-            smt_observacoestecnicas: entity.smt_observacoestecnicas,
-            smt_dimensionamento: entity.smt_dimensionamento,
-            smt_tipodeatividade: entity.smt_tipodeatividade,
-            smt_complexidade: entity.smt_complexidade,
-            smt_percentualdedesenvolvimento: entity.smt_percentualdedesenvolvimento,
-            smt_ordem: entity.smt_ordem
-        }));
+        const modelLines = [];
+        for (const entity of result.entities) {
+            modelLines.push({
+                smt_linhademodelodeestimativaid: entity.smt_linhademodelodeestimativaid,
+                smt_modelodeestimativaid: modeloId,
+                smt_faseid: entity['_smt_fase_value'] || entity['fase.smt_faseid'],
+                smt_subfaseid: entity['_smt_subfase_value'] || entity['subfase.smt_subfaseid'],
+                smt_tipodedesenvolvimentoid: entity['_smt_tipodedesenvolvimento_value'] || entity['tipo.smt_tipodedesenvolvimentoid'],
+                smt_modulo: entity.smt_modulo,
+                smt_requisitodocliente: entity.smt_requisitodocliente,
+                smt_funcionalidade: entity.smt_funcionalidade,
+                smt_descricao: entity.smt_descricao,
+                smt_observacoestecnicas: entity.smt_observacoestecnicas,
+                smt_dimensionamento: entity.smt_dimensionamento,
+                // Convert option set integer values back to string enums
+                smt_tipodeatividade: await this.activityTypeFromOptionSet(entity.smt_tipodeatividade),
+                smt_complexidade: await this.complexityFromOptionSet(entity.smt_complexidade),
+                smt_dodesenvolvimento: entity.smt_dedesenvolvimento,
+                smt_ordem: entity.smt_ordem
+            });
+        }
+        
+        return modelLines;
     }
 
     /**

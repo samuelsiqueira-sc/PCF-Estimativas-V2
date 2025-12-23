@@ -77,7 +77,7 @@ export const EstimationHeaderComponent: React.FC<EstimationHeaderComponentProps>
                             root: { 
                                 color: '#323130', 
                                 fontWeight: 600,
-                                marginBottom: 6,
+                                marginBottom: 12,
                                 textTransform: 'uppercase',
                                 letterSpacing: '0.3px',
                                 fontSize: 11,
@@ -121,7 +121,7 @@ export const EstimationHeaderComponent: React.FC<EstimationHeaderComponentProps>
                             root: { 
                                 color: '#323130', 
                                 fontWeight: 600,
-                                marginBottom: 6,
+                                marginBottom: 12,
                                 textTransform: 'uppercase',
                                 letterSpacing: '0.3px',
                                 fontSize: 11,
@@ -165,7 +165,7 @@ export const EstimationHeaderComponent: React.FC<EstimationHeaderComponentProps>
                             root: { 
                                 color: '#323130', 
                                 fontWeight: 600,
-                                marginBottom: 6,
+                                marginBottom: 12,
                                 textTransform: 'uppercase',
                                 letterSpacing: '0.3px',
                                 fontSize: 11,
