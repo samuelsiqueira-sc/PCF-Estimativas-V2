@@ -150,7 +150,7 @@ export class DataverseService {
 
     /**
      * Get all activity type labels from Dataverse
-     * Returns an array of [label, value] pairs
+     * Returns an array of [label, value] pairs sorted by value
      */
     public async getActivityTypeLabels(): Promise<Array<{ label: string; value: number }>> {
         await this.initializeOptionSets();
@@ -158,12 +158,13 @@ export class DataverseService {
         this.activityTypeMapping.forEach((value, label) => {
             labels.push({ label, value });
         });
-        return labels;
+        // Sort by value for consistent ordering
+        return labels.sort((a, b) => a.value - b.value);
     }
 
     /**
      * Get all complexity labels from Dataverse
-     * Returns an array of [label, value] pairs
+     * Returns an array of [label, value] pairs sorted by value
      */
     public async getComplexityLabels(): Promise<Array<{ label: string; value: number }>> {
         await this.initializeOptionSets();
@@ -171,7 +172,8 @@ export class DataverseService {
         this.complexityMapping.forEach((value, label) => {
             labels.push({ label, value });
         });
-        return labels;
+        // Sort by value for consistent ordering
+        return labels.sort((a, b) => a.value - b.value);
     }
 
     /**
