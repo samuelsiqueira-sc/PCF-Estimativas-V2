@@ -130,7 +130,6 @@ export const EstimationLinesGridComponent: React.FC<EstimationLinesGridComponent
         onChange: (lineId: string, value: string) => void
     ): JSX.Element => {
         const selectedValue = item[fieldName] as string | undefined;
-        console.log(`Dropdown for ${fieldName}:`, { selectedValue, hasOptions: options.length, item });
         
         return (
             <Dropdown
@@ -182,7 +181,6 @@ export const EstimationLinesGridComponent: React.FC<EstimationLinesGridComponent
             minWidth: 120,
             maxWidth: 120,
             onRender: (item: LinhaDeEstimativa) => {
-                console.log('Rendering phase dropdown for line:', item.smt_linhadeestimativaid, 'faseid:', item.smt_faseid, 'fase:', item.smt_fase);
                 return renderDropdown(item, 'smt_faseid', faseOptions, (lineId, value) => 
                     onChange(lineId, { smt_faseid: value })
                 );
@@ -195,7 +193,6 @@ export const EstimationLinesGridComponent: React.FC<EstimationLinesGridComponent
             minWidth: 120,
             maxWidth: 120,
             onRender: (item: LinhaDeEstimativa) => {
-                console.log('Rendering subphase dropdown for line:', item.smt_linhadeestimativaid, 'subfaseid:', item.smt_subfaseid, 'subfase:', item.smt_subfase);
                 return renderDropdown(item, 'smt_subfaseid', subfaseOptions, (lineId, value) => 
                     onChange(lineId, { smt_subfaseid: value })
                 );
@@ -232,7 +229,6 @@ export const EstimationLinesGridComponent: React.FC<EstimationLinesGridComponent
             minWidth: 120,
             maxWidth: 150,
             onRender: (item: LinhaDeEstimativa) => {
-                console.log('Rendering devType dropdown for line:', item.smt_linhadeestimativaid, 'tipoid:', item.smt_tipodedesenvolvimentoid, 'tipo:', item.smt_tipodedesenvolvimento);
                 return renderDropdown(item, 'smt_tipodedesenvolvimentoid', tipoDesenvolvimentoOptions, onDevelopmentTypeChange);
             }
         },

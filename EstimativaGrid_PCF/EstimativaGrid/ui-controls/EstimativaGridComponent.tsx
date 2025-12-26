@@ -256,53 +256,51 @@ export class EstimativaGridComponent extends React.Component<EstimativaGridCompo
             this.setState({ loading: true, showModelImportDialog: false });
 
             if (!this.props.estimativaId) {
-                // Save estimation first if it's new
-                await this.handleSave();
+                throw new Error('No estimation ID available. The PCF control must be loaded within an estimation record.');
             }
 
-            if (this.props.estimativaId) {
-                const startingOrder = this.state.lines.length;
-                const importedLines: LinhaDeEstimativa[] = [];
+            const startingOrder = this.state.lines.length;
+            const importedLines: LinhaDeEstimativa[] = [];
 
-                for (const modelId of modelIds) {
-                    const lines = await this.dataverseService.importModeloDeEstimativa(
-                        this.props.estimativaId,
-                        modelId,
-                        startingOrder + importedLines.length
-                    );
-                    importedLines.push(...lines);
-                }
-
-                // Reload lines after import
-                const lines = await this.dataverseService.retrieveLinhasDeEstimativa(this.props.estimativaId);
-                const recalculatedLines = recalculateAllLines(
-                    lines,
-                    this.state.developmentLabel,
-                    this.state.processLabel,
-                    this.state.supportLabel
+            for (const modelId of modelIds) {
+                const lines = await this.dataverseService.importModeloDeEstimativa(
+                    this.props.estimativaId,
+                    modelId,
+                    startingOrder + importedLines.length
                 );
-
-                // Update estimation totals
-                const totalDevelopmentHours = calculateTotalDevelopmentHours(recalculatedLines, this.state.developmentLabel);
-                const totalSupportHours = calculateTotalSupportHours(recalculatedLines, this.state.supportLabel);
-                const totalProjectHours = calculateTotalProjectHours(totalDevelopmentHours, totalSupportHours);
-
-                this.setState({
-                    loading: false,
-                    lines: recalculatedLines,
-                    estimativa: {
-                        ...this.state.estimativa,
-                        smt_totaldesenvolvimento: totalDevelopmentHours,
-                        smt_totalhorasapoio: totalSupportHours,
-                        smt_totalhorasprojeto: totalProjectHours
-                    },
-                    isDirty: true
-                });
+                importedLines.push(...lines);
             }
+
+            // Reload lines after import
+            const lines = await this.dataverseService.retrieveLinhasDeEstimativa(this.props.estimativaId);
+            const recalculatedLines = recalculateAllLines(
+                lines,
+                this.state.developmentLabel,
+                this.state.processLabel,
+                this.state.supportLabel
+            );
+
+            // Update estimation totals
+            const totalDevelopmentHours = calculateTotalDevelopmentHours(recalculatedLines, this.state.developmentLabel);
+            const totalSupportHours = calculateTotalSupportHours(recalculatedLines, this.state.supportLabel);
+            const totalProjectHours = calculateTotalProjectHours(totalDevelopmentHours, totalSupportHours);
+
+            this.setState({
+                loading: false,
+                lines: recalculatedLines,
+                estimativa: {
+                    ...this.state.estimativa,
+                    smt_totaldesenvolvimento: totalDevelopmentHours,
+                    smt_totalhorasapoio: totalSupportHours,
+                    smt_totalhorasprojeto: totalProjectHours
+                },
+                isDirty: true
+            });
         } catch (error) {
+            console.error('Error during model import:', error);
             const errorMessage = error instanceof Error 
                 ? `Failed to import model: ${error.message}` 
-                : 'Failed to import model. Please ensure the estimation is saved first.';
+                : 'Failed to import model. Please try again.';
             this.setState({
                 loading: false,
                 error: errorMessage

@@ -70,6 +70,11 @@ export class DataverseService {
                 this.activityTypeReverseMapping.set(922340000, 'Development');
                 this.activityTypeReverseMapping.set(922340001, 'Process');
                 this.activityTypeReverseMapping.set(922340002, 'Support');
+                
+                // Add alternative option set values (used in smt_linhamodelo)
+                this.activityTypeReverseMapping.set(112680000, 'Development');
+                this.activityTypeReverseMapping.set(112680001, 'Process');
+                this.activityTypeReverseMapping.set(112680002, 'Support');
             }
 
             if (this.complexityMapping.size === 0) {
@@ -84,6 +89,13 @@ export class DataverseService {
                 this.complexityReverseMapping.set(922340002, 'Medium');
                 this.complexityReverseMapping.set(922340003, 'High');
                 this.complexityReverseMapping.set(922340004, 'Very High');
+                
+                // Add alternative option set values (used in smt_linhamodelo)
+                this.complexityReverseMapping.set(112680000, 'Very Low');
+                this.complexityReverseMapping.set(112680001, 'Low');
+                this.complexityReverseMapping.set(112680002, 'Medium');
+                this.complexityReverseMapping.set(112680003, 'High');
+                this.complexityReverseMapping.set(112680004, 'Very High');
             }
 
             this.optionSetsInitialized = true;
@@ -97,6 +109,11 @@ export class DataverseService {
             this.activityTypeReverseMapping.set(922340001, 'Process');
             this.activityTypeReverseMapping.set(922340002, 'Support');
             
+            // Add alternative option set values (used in smt_linhamodelo)
+            this.activityTypeReverseMapping.set(112680000, 'Development');
+            this.activityTypeReverseMapping.set(112680001, 'Process');
+            this.activityTypeReverseMapping.set(112680002, 'Support');
+            
             this.complexityMapping.set('Very Low', 922340000);
             this.complexityMapping.set('Low', 922340001);
             this.complexityMapping.set('Medium', 922340002);
@@ -108,6 +125,13 @@ export class DataverseService {
             this.complexityReverseMapping.set(922340003, 'High');
             this.complexityReverseMapping.set(922340004, 'Very High');
             
+            // Add alternative option set values (used in smt_linhamodelo)
+            this.complexityReverseMapping.set(112680000, 'Very Low');
+            this.complexityReverseMapping.set(112680001, 'Low');
+            this.complexityReverseMapping.set(112680002, 'Medium');
+            this.complexityReverseMapping.set(112680003, 'High');
+            this.complexityReverseMapping.set(112680004, 'Very High');
+            
             this.optionSetsInitialized = true;
         }
     }
@@ -118,7 +142,8 @@ export class DataverseService {
     private async activityTypeToOptionSet(activityType: string | undefined): Promise<number | undefined> {
         if (!activityType) return undefined;
         await this.initializeOptionSets();
-        return this.activityTypeMapping.get(activityType);
+        const result = this.activityTypeMapping.get(activityType);
+        return result;
     }
 
     /**
@@ -127,7 +152,8 @@ export class DataverseService {
     private async activityTypeFromOptionSet(optionSetValue: number | undefined): Promise<string | undefined> {
         if (optionSetValue === undefined) return undefined;
         await this.initializeOptionSets();
-        return this.activityTypeReverseMapping.get(optionSetValue);
+        const result = this.activityTypeReverseMapping.get(optionSetValue);
+        return result;
     }
 
     /**
@@ -136,7 +162,8 @@ export class DataverseService {
     private async complexityToOptionSet(complexity: string | undefined): Promise<number | undefined> {
         if (!complexity) return undefined;
         await this.initializeOptionSets();
-        return this.complexityMapping.get(complexity);
+        const result = this.complexityMapping.get(complexity);
+        return result;
     }
 
     /**
@@ -145,7 +172,8 @@ export class DataverseService {
     private async complexityFromOptionSet(optionSetValue: number | undefined): Promise<string | undefined> {
         if (optionSetValue === undefined) return undefined;
         await this.initializeOptionSets();
-        return this.complexityReverseMapping.get(optionSetValue);
+        const result = this.complexityReverseMapping.get(optionSetValue);
+        return result;
     }
 
     /**
@@ -394,25 +422,8 @@ export class DataverseService {
 
         const result = await this.webAPI.retrieveMultipleRecords('smt_linhadeestimativa', query);
         
-        console.log('Retrieved lines from Dataverse:', result.entities.length);
-        
         const lines = [];
         for (const entity of result.entities) {
-            // Debug logging for lookup fields
-            console.log('Processing line:', {
-                id: entity.smt_linhadeestimativaid,
-                fase_value: entity._smt_fase_value,
-                fase_Expanded_Capital: entity.smt_Fase,
-                fase_expanded_lower: entity.smt_fase,
-                subfase_value: entity._smt_subfase_value,
-                subfase_Expanded_Capital: entity.smt_Subfase,
-                subfase_expanded_lower: entity.smt_subfase,
-                tipo_value: entity._smt_tipodedesenvolvimento_value,
-                tipo_Expanded_Capital: entity.smt_TipodeDesenvolvimento,
-                tipo_expanded_lower: entity.smt_tipodedesenvolvimento,
-                allKeys: Object.keys(entity)
-            });
-            
             // Try to get the expanded lookup values with case fallbacks
             const faseExpanded = entity.smt_Fase || entity.smt_fase;
             const subfaseExpanded = entity.smt_Subfase || entity.smt_subfase;
@@ -540,8 +551,8 @@ export class DataverseService {
     async retrieveLinhasDeModelo(modeloId: string): Promise<LinhaDeModeloDeEstimativa[]> {
         const fetchXml = `
             <fetch>
-                <entity name="smt_linhademodelodeestimativa">
-                    <attribute name="smt_linhademodelodeestimativaid" />
+                <entity name="smt_linhamodelo">
+                    <attribute name="smt_linhamodeloid" />
                     <attribute name="smt_modulo" />
                     <attribute name="smt_requisitodocliente" />
                     <attribute name="smt_funcionalidade" />
@@ -550,12 +561,12 @@ export class DataverseService {
                     <attribute name="smt_dimensionamento" />
                     <attribute name="smt_tipodeatividade" />
                     <attribute name="smt_complexidade" />
-                    <attribute name="smt_dedesenvolvimento" />
-                    <attribute name="smt_ordem" />
+                    <attribute name="smt_dodesenvolvimento" />
+                    <!-- <attribute name="smt_ordem" /> -->
                     <filter>
                         <condition attribute="smt_modelodeestimativa" operator="eq" value="${modeloId}" />
                     </filter>
-                    <order attribute="smt_ordem" descending="false" />
+                    <!-- <order attribute="smt_ordem" descending="false" /> -->
                     <link-entity name="smt_fase" from="smt_faseid" to="smt_fase" alias="fase" link-type="outer">
                         <attribute name="smt_faseid" />
                     </link-entity>
@@ -570,29 +581,34 @@ export class DataverseService {
         `;
 
         const result = await this.webAPI.retrieveMultipleRecords(
-            'smt_linhademodelodeestimativa',
+            'smt_linhamodelo',
             `?fetchXml=${encodeURIComponent(fetchXml)}`
         );
         
         const modelLines = [];
         for (const entity of result.entities) {
+            // Use formatted values (labels) instead of integer values for option sets
+            // This ensures consistency across entities with different option set values
+            const tipodeatividadeLabel = entity['smt_tipodeatividade@OData.Community.Display.V1.FormattedValue'];
+            const complexidadeLabel = entity['smt_complexidade@OData.Community.Display.V1.FormattedValue'];
+            
             modelLines.push({
-                smt_linhademodelodeestimativaid: entity.smt_linhademodelodeestimativaid,
+                smt_linhamodeloid: entity.smt_linhamodeloid,
                 smt_modelodeestimativaid: modeloId,
-                smt_faseid: entity['_smt_fase_value'] || entity['fase.smt_faseid'],
-                smt_subfaseid: entity['_smt_subfase_value'] || entity['subfase.smt_subfaseid'],
-                smt_tipodedesenvolvimentoid: entity['_smt_tipodedesenvolvimento_value'] || entity['tipo.smt_tipodedesenvolvimentoid'],
+                smt_faseid: entity['_smt_fase_value'] || entity['fase.smt_faseid'] || undefined,
+                smt_subfaseid: entity['_smt_subfase_value'] || entity['subfase.smt_subfaseid'] || undefined,
+                smt_tipodedesenvolvimentoid: entity['_smt_tipodedesenvolvimento_value'] || entity['tipo.smt_tipodedesenvolvimentoid'] || undefined,
                 smt_modulo: entity.smt_modulo,
                 smt_requisitodocliente: entity.smt_requisitodocliente,
                 smt_funcionalidade: entity.smt_funcionalidade,
                 smt_descricao: entity.smt_descricao,
                 smt_observacoestecnicas: entity.smt_observacoestecnicas,
                 smt_dimensionamento: entity.smt_dimensionamento,
-                // Convert option set integer values back to string enums
-                smt_tipodeatividade: await this.activityTypeFromOptionSet(entity.smt_tipodeatividade),
-                smt_complexidade: await this.complexityFromOptionSet(entity.smt_complexidade),
-                smt_dodesenvolvimento: entity.smt_dedesenvolvimento,
-                smt_ordem: entity.smt_ordem
+                // Use the formatted labels directly - these are consistent across entities
+                smt_tipodeatividade: tipodeatividadeLabel,
+                smt_complexidade: complexidadeLabel,
+                smt_dodesenvolvimento: entity.smt_dodesenvolvimento
+                // smt_ordem: entity.smt_ordem
             });
         }
         
