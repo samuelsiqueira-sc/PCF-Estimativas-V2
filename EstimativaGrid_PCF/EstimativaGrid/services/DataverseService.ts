@@ -289,7 +289,7 @@ export class DataverseService {
         if (linha.smt_faseid) 
             record['smt_Fase@odata.bind'] = `/smt_fases(${linha.smt_faseid})`;
         if (linha.smt_subfaseid) 
-            record['smt_Subfase@odata.bind@odata.bind'] = `/smt_subfases(${linha.smt_subfaseid})`;
+            record['smt_Subfase@odata.bind'] = `/smt_subfases(${linha.smt_subfaseid})`;
         if (linha.smt_tipodedesenvolvimentoid) 
             record['smt_TipodeDesenvolvimento@odata.bind'] = `/smt_tipodedesenvolvimentos(${linha.smt_tipodedesenvolvimentoid})`;
         
@@ -328,15 +328,15 @@ export class DataverseService {
     async updateLinhaDeEstimativa(linhaId: string, linha: Partial<LinhaDeEstimativa>): Promise<void> {
         const record: ComponentFramework.WebApi.Entity = {};
         
-        // Handle lookup fields - only add if they have valid values
+        // Handle lookup fields - must match the navigation property name exactly (case-sensitive)
         if (linha.smt_faseid !== undefined && linha.smt_faseid) {
-            record['smt_fase@odata.bind'] = `/smt_fases(${linha.smt_faseid})`;
+            record['smt_Fase@odata.bind'] = `/smt_fases(${linha.smt_faseid})`;
         }
         if (linha.smt_subfaseid !== undefined && linha.smt_subfaseid) {
-            record['smt_subfase@odata.bind'] = `/smt_subfases(${linha.smt_subfaseid})`;
+            record['smt_Subfase@odata.bind'] = `/smt_subfases(${linha.smt_subfaseid})`;
         }
         if (linha.smt_tipodedesenvolvimentoid !== undefined && linha.smt_tipodedesenvolvimentoid) {
-            record['smt_tipodedesenvolvimento@odata.bind'] = `/smt_tipodedesenvolvimentos(${linha.smt_tipodedesenvolvimentoid})`;
+            record['smt_TipodeDesenvolvimento@odata.bind'] = `/smt_tipodedesenvolvimentos(${linha.smt_tipodedesenvolvimentoid})`;
         }
         
         // Handle regular properties
@@ -386,53 +386,47 @@ export class DataverseService {
             throw new Error('Invalid estimation ID format');
         }
         
-        const fetchXml = `
-            <fetch>
-                <entity name="smt_linhadeestimativa">
-                    <attribute name="smt_linhadeestimativaid" />
-                    <attribute name="smt_modulo" />
-                    <attribute name="smt_requisitocliente" />
-                    <attribute name="smt_funcionalidade" />
-                    <attribute name="smt_descricao" />
-                    <attribute name="smt_observacoestecnicas" />
-                    <attribute name="smt_dimensionamento" />
-                    <attribute name="smt_estimativafinal" />
-                    <attribute name="smt_tipodeatividade" />
-                    <attribute name="smt_complexidade" />
-                    <attribute name="smt_dedesenvolvimento" />
-                    <attribute name="versionnumber" />
-                    <filter>
-                        <condition attribute="smt_estimativa" operator="eq" value="${estimativaId}" />
-                    </filter>
-                    <link-entity name="smt_fase" from="smt_faseid" to="smt_fase" alias="fase" link-type="outer">
-                        <attribute name="smt_faseid" />
-                        <attribute name="smt_nomefase" />
-                    </link-entity>
-                    <link-entity name="smt_subfase" from="smt_subfaseid" to="smt_subfase" alias="subfase" link-type="outer">
-                        <attribute name="smt_subfaseid" />
-                        <attribute name="smt_nomesubfase" />
-                    </link-entity>
-                    <link-entity name="smt_tipodedesenvolvimento" from="smt_tipodedesenvolvimentoid" to="smt_tipodedesenvolvimento" alias="tipo" link-type="outer">
-                        <attribute name="smt_tipodedesenvolvimentoid" />
-                        <attribute name="smt_nometipo" />
-                    </link-entity>
-                </entity>
-            </fetch>
-        `;
+        // Use OData $expand to retrieve lookup display names reliably
+        // IMPORTANT: Include _smt_fase_value, _smt_subfase_value, and _smt_tipodedesenvolvimento_value to get lookup IDs
+        const query = `?$select=smt_linhadeestimativaid,smt_modulo,smt_requisitocliente,smt_funcionalidade,smt_descricao,smt_observacoestecnicas,smt_dimensionamento,smt_estimativafinal,smt_tipodeatividade,smt_complexidade,smt_dedesenvolvimento,versionnumber,_smt_fase_value,_smt_subfase_value,_smt_tipodedesenvolvimento_value` +
+            `&$expand=smt_Fase($select=smt_faseid,smt_nomefase),smt_Subfase($select=smt_subfaseid,smt_nomesubfase),smt_TipodeDesenvolvimento($select=smt_tipodedesenvolvimentoid,smt_nometipo)` +
+            `&$filter=_smt_estimativa_value eq ${estimativaId}`;
 
-        const result = await this.webAPI.retrieveMultipleRecords('smt_linhadeestimativa', `?fetchXml=${encodeURIComponent(fetchXml)}`);
+        const result = await this.webAPI.retrieveMultipleRecords('smt_linhadeestimativa', query);
+        
+        console.log('Retrieved lines from Dataverse:', result.entities.length);
         
         const lines = [];
         for (const entity of result.entities) {
+            // Debug logging for lookup fields
+            console.log('Processing line:', {
+                id: entity.smt_linhadeestimativaid,
+                fase_value: entity._smt_fase_value,
+                fase_Expanded_Capital: entity.smt_Fase,
+                fase_expanded_lower: entity.smt_fase,
+                subfase_value: entity._smt_subfase_value,
+                subfase_Expanded_Capital: entity.smt_Subfase,
+                subfase_expanded_lower: entity.smt_subfase,
+                tipo_value: entity._smt_tipodedesenvolvimento_value,
+                tipo_Expanded_Capital: entity.smt_TipodeDesenvolvimento,
+                tipo_expanded_lower: entity.smt_tipodedesenvolvimento,
+                allKeys: Object.keys(entity)
+            });
+            
+            // Try to get the expanded lookup values with case fallbacks
+            const faseExpanded = entity.smt_Fase || entity.smt_fase;
+            const subfaseExpanded = entity.smt_Subfase || entity.smt_subfase;
+            const tipoExpanded = entity.smt_TipodeDesenvolvimento || entity.smt_tipodedesenvolvimento;
+            
             lines.push({
                 smt_linhadeestimativaid: entity.smt_linhadeestimativaid,
                 smt_estimativaid: estimativaId,
-                smt_faseid: entity['_smt_fase_value'],
-                smt_fase: entity['fase.smt_nomefase'],
-                smt_subfaseid: entity['_smt_subfase_value'],
-                smt_subfase: entity['subfase.smt_nomesubfase'],
-                smt_tipodedesenvolvimentoid: entity['_smt_tipodedesenvolvimento_value'],
-                smt_tipodedesenvolvimento: entity['tipo.smt_nometipo'],
+                smt_faseid: entity._smt_fase_value || undefined,
+                smt_fase: faseExpanded?.smt_nomefase || undefined,
+                smt_subfaseid: entity._smt_subfase_value || undefined,
+                smt_subfase: subfaseExpanded?.smt_nomesubfase || undefined,
+                smt_tipodedesenvolvimentoid: entity._smt_tipodedesenvolvimento_value || undefined,
+                smt_tipodedesenvolvimento: tipoExpanded?.smt_nometipo || undefined,
                 smt_modulo: entity.smt_modulo,
                 smt_requisitocliente: entity.smt_requisitocliente,
                 smt_funcionalidade: entity.smt_funcionalidade,
